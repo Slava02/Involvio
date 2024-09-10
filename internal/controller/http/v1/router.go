@@ -13,7 +13,7 @@ import (
 
 // NewRouter -.
 // Swagger spec:
-// @title       Go Clean Template API
+// @title       Involvio
 // @description Using a translation service as an example
 // @version     1.0
 // @host        localhost:8080
@@ -29,7 +29,8 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t *usecase.Usecase) {
 
 	// Routers
 	h := handler.Group("/v1")
+	_ = h
 	{
-		initRoutes(h)
+		//initRoutes(h)
 	}
 }
