@@ -5,7 +5,7 @@ import (
 	"github.com/Slava02/Involvio/pkg/postgres"
 )
 
-// TranslationRepo -.
+// Repo -.
 type Repo struct {
 	*postgres.Postgres
 }
