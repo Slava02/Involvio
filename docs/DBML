@@ -1,0 +1,46 @@
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+
+Table space {
+  id integer [pk]
+  name varchar
+  description varchar
+  tags jsonb
+}
+
+Table user {
+  id integer [pk]
+  first_name varchar
+  last_name varchar
+  username varchar
+  photo_url varchar
+  auth_date timestamp
+}
+
+Table user_space {
+  user_id integer [pk]
+  space_id integer [pk]
+  tags jsonb
+}
+
+Table user_event {
+  user_id integer [pk]
+  event_id integer [pk]
+}
+
+
+Table event {
+  id integer [pk]
+  name varchar
+  description varchar
+  begin_date timestamp
+  end_date timestamp
+}
+
+Ref: user_space.user_id > user.id
+Ref: user_space.space_id > space.id
+
+Ref: user_event.user_id > user.id
+Ref: user_event.event_id > event.id
+
+

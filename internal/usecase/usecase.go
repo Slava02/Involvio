@@ -1,6 +1,8 @@
 package usecase
 
-import "github.com/Slava02/Involvio/internal/interface"
+import (
+	"github.com/Slava02/Involvio/internal/interface"
+)
 
 type Usecase struct {
 }
