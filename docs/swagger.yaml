@@ -136,7 +136,7 @@ paths:
     post:
       tags:
         - user
-      summary: 'make admin'
+      summary: 'create user'
       requestBody:
         content:
           application/json:
@@ -208,10 +208,14 @@ paths:
           schema:
             type: integer
       requestBody:
-        $ref: '#/components/requestBodies/actionWithUserRequest'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/actionWithUserRequest'
       responses:
         '200':
           description: successful operation
+
   /user/{usersId}/reduce:
     post:
       tags:
@@ -224,20 +228,15 @@ paths:
           schema:
             type: integer
       requestBody:
-        $ref: '#/components/requestBodies/actionWithUserRequest'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/actionWithUserRequest'
       responses:
         '200':
           description: successful operation
 
 components:
-  requestBodies:
-    actionWithUserRequest:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/actionWithUserRequest'
-      required: true
-
   schemas:
     createSpacesRequest:
       type: object
@@ -246,7 +245,7 @@ components:
           type: integer
           example: 1234
         tags:
-          $ref: '#/components/schemas/tags'
+          $ref: '#/components/schemas/spaceTags'
     createSpacesResponse:
       type: object
       properties:
@@ -304,6 +303,8 @@ components:
       properties:
         user:
           $ref: '#/components/schemas/user'
+        tags:
+          $ref: '#/components/schemas/tags'
     listUsersResponse:
       type: object
       properties:
@@ -325,7 +326,7 @@ components:
           example: 1234
         user_tags:
           $ref: '#/components/schemas/tags'
-        psir_tags:
+        pair_tags:
           $ref: '#/components/schemas/tags'
     user:
       type: object
@@ -381,8 +382,8 @@ components:
           type: string
           example: space for test
         tags:
-          $ref: '#/components/schemas/tags'
-    tags:
+          $ref: '#/components/schemas/spaceTags'
+    spaceTags:
       type: array
       items:
         type: object
@@ -399,3 +400,12 @@ components:
             - math
             - cs
             - philosophy
+    tags:
+      type: array
+      items:
+        type: object
+        additionalProperties:
+          type: string
+        example:
+          course: math
+
