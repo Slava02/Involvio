@@ -1,419 +1,401 @@
----
-swagger: "2.0"
+openapi: 3.0.0
 info:
-  description: "Endpoints for pet-project involvio"
-  version: "1.0.7"
-  title: "Involvio"
+  description: Endpoints for pet-project involvio
+  version: 1.0.0-oas3
+  title: Involvio
 tags:
-  - name: "spaces"
-  - name: "events"
-  - name: "users"
-
-schemes:
-  - "https"
-  - "http"
+  - name: spaces
+  - name: events
+  - name: user
 paths:
   /spaces:
     post:
       tags:
-        - "spaces"
-      summary: "create a space"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
-      parameters:
-        - in: "body"
-          name: "body"
-          required: true
-          schema:
-            $ref: "#/definitions/createSpacesRequest"
+        - spaces
+      summary: create a space
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createSpacesRequest'
+        required: true
       responses:
-        200:
-          description: "successful operation"
-          schema:
-            $ref: "#/definitions/createSpacesResponse"
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/createSpacesResponse'
     get:
       tags:
-        - "spaces"
-      summary: "get list of availible spaces"
-      produces:
-        - "application/json"
+        - spaces
+      summary: get list of availible spaces
       responses:
-        200:
-          description: "successful operation"
-          schema:
-            $ref: "#/definitions/listSpacesResponse"
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/listSpacesResponse'
   /spaces/{spaceId}:
     get:
       tags:
-        - "spaces"
-      summary: "space info"
-      produces:
-        - "application/json"
+        - spaces
+      summary: space info
       parameters:
-        - name: "spaceId"
-          in: "path"
+        - name: spaceId
+          in: path
           required: true
-          type: integer
-      responses:
-        200:
-          description: "successful operation"
           schema:
-            $ref: "#/definitions/spaceInfoResponse"
-
+            type: integer
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/spaceInfoResponse'
   /spaces/{spaceId}/join:
     post:
       tags:
-        - "spaces"
-      summary: "join space"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
+        - spaces
+      summary: join space
       parameters:
-        - name: "spaceId"
-          in: "path"
-          required: true
-          type: integer
-        - in: "body"
-          name: "body"
+        - name: spaceId
+          in: path
           required: true
           schema:
-            $ref: "#/definitions/joinSpacesRequest"
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/joinSpacesRequest'
+        required: true
       responses:
-        200:
-          description: "successful operation"
-
+        '200':
+          description: successful operation
   /events:
     post:
       tags:
-        - "events"
-      summary: "Create event"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
-      parameters:
-        - in: "body"
-          name: "body"
-          required: true
-          schema:
-            $ref: "#/definitions/createEventRequest"
+        - events
+      summary: Create event
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createEventRequest'
+        required: true
       responses:
-        200:
-          description: "successful operation"
-          schema:
-            $ref: "#/definitions/createEventResponse"
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/createEventResponse'
   /events/{eventId}:
     get:
       tags:
-        - "events"
-      summary: "event info"
-      produces:
-        - "application/json"
+        - events
+      summary: event info
       parameters:
-        - name: "eventId"
-          in: "path"
+        - name: eventId
+          in: path
           required: true
-          type: integer
-      responses:
-        200:
-          description: "successful operation"
           schema:
-            $ref: "#/definitions/eventInfoResponse"
-
+            type: integer
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/eventInfoResponse'
   /events/{eventId}/join:
     post:
       tags:
-        - "events"
-      summary: "join event "
-      consumes:
-        - "application/json"
+        - events
+      summary: 'join event '
       parameters:
-        - name: "eventId"
-          in: "path"
-          required: true
-          type: integer
-        - in: "body"
-          name: "body"
+        - name: eventId
+          in: path
           required: true
           schema:
-            $ref: "#/definitions/joinEventRequest"
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/joinEventRequest'
+        required: true
       responses:
-        200:
-          description: "successful operation"
+        '200':
+          description: successful operation
 
+  /user:
+    post:
+      tags:
+        - user
+      summary: 'make admin'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/user'
+      responses:
+        '200':
+          description: successful operation
 
-
-  /users/{usersId}:
+  /user/{userId}:
     get:
       tags:
-        - "users"
-      summary: "show profile"
-      produces:
-        - "application/json"
+        - user
+      summary: show profile
       parameters:
-        - name: "usersId"
-          in: "path"
+        - name: userId
+          in: path
           required: true
-          type: integer
-      responses:
-        200:
-          description: "successful operation"
           schema:
-            $ref: "#/definitions/userInfoResponse"
-
+            type: integer
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/userInfoResponse'
     delete:
       tags:
-        - "users"
-      summary: "delete user"
+        - user
+      summary: delete user
       parameters:
-        - name: "usersId"
-          in: "path"
-          required: true
-          type: integer
-      responses:
-        200:
-          description: "successful operation"
-
-    post:
-      tags:
-        - "users"
-      summary: "fill the blank (or edit) Info about youself and your interests"
-      consumes:
-        - "application/json"
-      parameters:
-        - name: "usersId"
-          in: "path"
-          required: true
-          type: integer
-        - in: "body"
-          name: "body"
+        - name: userId
+          in: path
           required: true
           schema:
-            $ref: "#/definitions/fillBlankRequest"
+            type: integer
       responses:
-        200:
-          description: "successful operation"
-
-  /users/{usersId}/promote:
-    post:
+        '200':
+          description: successful operation
+    patch:
       tags:
-        - "users"
-      summary: "make admin"
-      consumes:
-        - "application/json"
+        - user
+      summary: fill the blank (or edit) Info about youself and your interests
       parameters:
-        - name: "usersId"
-          in: "path"
-          required: true
-          type: integer
-        - in: "body"
-          name: "body"
+        - name: userId
+          in: path
           required: true
           schema:
-            $ref: "#/definitions/actionWithUserRequest"
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/fillBlankRequest'
       responses:
-        200:
-          description: "successful operation"
+        '200':
+          description: successful operation
 
-  /users/{usersId}/reduce:
+  /user/{usersId}/promote:
     post:
       tags:
-        - "users"
-      summary: "cut priveleges (creator only)"
-      consumes:
-        - "application/json"
+        - user
+      summary: make admin
       parameters:
-        - name: "usersId"
-          in: "path"
-          required: true
-          type: integer
-        - in: "body"
-          name: "body"
+        - name: usersId
+          in: path
           required: true
           schema:
-            $ref: "#/definitions/actionWithUserRequest"
+            type: integer
+      requestBody:
+        $ref: '#/components/requestBodies/actionWithUserRequest'
       responses:
-        200:
-          description: "successful operation"
-
-definitions:
-  createSpacesRequest:
-    type: object
-    properties:
-      admin_id:
-        type: integer
-        example: 1234
+        '200':
+          description: successful operation
+  /user/{usersId}/reduce:
+    post:
       tags:
-        $ref: "#/definitions/tags"
+        - user
+      summary: cut priveleges (creator only)
+      parameters:
+        - name: usersId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        $ref: '#/components/requestBodies/actionWithUserRequest'
+      responses:
+        '200':
+          description: successful operation
 
-  createSpacesResponse:
-    type: object
-    properties:
-      space_id:
-        type: integer
-        example: 1234
+components:
+  requestBodies:
+    actionWithUserRequest:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/actionWithUserRequest'
+      required: true
 
-  listSpacesResponse:
-    type: object
-    properties:
-      spaces:
-        type: array
-        items:
-          $ref: "#/definitions/space"
-
-
-  spaceInfoResponse:
-    type: object
-    properties:
-      space:
-        $ref: "#/definitions/space"
-
-
-  joinSpacesRequest:
-    $ref: "#/definitions/user"
-
-
-  createEventRequest:
-    type: object
-    properties:
-      user_id:
-        type: integer
-        example: 1234
-      space_id:
-        type: integer
-        example: 1234
-      event:
-        $ref: "#/definitions/event"
-
-  createEventResponse:
-    type: object
-    properties:
-      event_id:
-        type: integer
-        example: 1234
-
-  joinEventRequest:
-    type: object
-    properties:
-      user_id:
-        type: integer
-        example: 1234
-
-
-  eventInfoResponse:
-    type: object
-    properties:
-      event:
-        $ref: "#/definitions/event"
-      users:
-        type: array
-        items:
-          $ref: "#/definitions/user"
-
-  userInfoResponse:
-    type: object
-    properties:
-      user:
-        $ref: "#/definitions/user"
-
-  listUsersResponse:
-    type: object
-    properties:
-      users:
-        type: array
-        items:
-          $ref: "#/definitions/user"
-
-  actionWithUserRequest:
-    type: object
-    properties:
-      space_id:
-        type: integer
-        example: 1234
-
-  fillBlankRequest:
-    type: object
-    properties:
-      space_id:
-        type: integer
-        example: 1234
-      user_tags:
-        $ref: "#/definitions/tags"
-      psir_tags:
-        $ref: "#/definitions/tags"
-
-  user:
-    type: object
-    properties:
-      user_id:
-        type: integer
-        example: 1234
-      first_name:
-        type: string
-        example: "ivan"
-      last_name:
-        type: string
-        example: "pupkin"
-      username:
-        type: string
-        example: "ivan_pupk123"
-      photo_url:
-        type: string
-        example: "http://my_photo"
-      auth_date:
-        type: string
-        format: date-time
-        example: "11.01.2002 12:00"
-
-  event:
-    type: object
-    properties:
-      name:
-        type: string
-        example: "fun event"
-      description:
-        type: string
-        example: "enormously fun event"
-      begin_date:
-        type: string
-        format: date-time
-        example: "11.01.2002 12:00"
-      end_date:
-        type: string
-        format: date-time
-        example: "11.01.2002 12:00"
-      tags:
-        $ref: "#/definitions/tags"
-
-  space:
-    type: object
-    properties:
-      space_id:
-        type: integer
-        example: 1234
-      space_name:
-        type: string
-        example: "test"
-      space_description:
-        type: string
-        example: "space for test"
-      tags:
-        $ref: "#/definitions/tags"
-
-  tags:
-    type: array
-    items:
+  schemas:
+    createSpacesRequest:
       type: object
-      additionalProperties:
-        type: array
-        items:
+      properties:
+        admin_id:
+          type: integer
+          example: 1234
+        tags:
+          $ref: '#/components/schemas/tags'
+    createSpacesResponse:
+      type: object
+      properties:
+        space_id:
+          type: integer
+          example: 1234
+    listSpacesResponse:
+      type: object
+      properties:
+        spaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/space'
+    spaceInfoResponse:
+      type: object
+      properties:
+        space:
+          $ref: '#/components/schemas/space'
+    joinSpacesRequest:
+      $ref: '#/components/schemas/user'
+    createEventRequest:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          example: 1234
+        space_id:
+          type: integer
+          example: 1234
+        event:
+          $ref: '#/components/schemas/event'
+    createEventResponse:
+      type: object
+      properties:
+        event_id:
+          type: integer
+          example: 1234
+    joinEventRequest:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          example: 1234
+    eventInfoResponse:
+      type: object
+      properties:
+        event:
+          $ref: '#/components/schemas/event'
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/user'
+    userInfoResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/user'
+    listUsersResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/user'
+    actionWithUserRequest:
+      type: object
+      properties:
+        space_id:
+          type: integer
+          example: 1234
+    fillBlankRequest:
+      type: object
+      properties:
+        space_id:
+          type: integer
+          example: 1234
+        user_tags:
+          $ref: '#/components/schemas/tags'
+        psir_tags:
+          $ref: '#/components/schemas/tags'
+    user:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          example: 1234
+        first_name:
           type: string
+          example: ivan
+        last_name:
+          type: string
+          example: pupkin
+        username:
+          type: string
+          example: ivan_pupk123
+        photo_url:
+          type: string
+          example: http://my_photo
+        auth_date:
+          type: string
+          format: date-time
+          example: 11.01.2002 12:00
+    event:
+      type: object
+      properties:
+        name:
+          type: string
+          example: fun event
+        description:
+          type: string
+          example: enormously fun event
+        begin_date:
+          type: string
+          format: date-time
+          example: 11.01.2002 12:00
+        end_date:
+          type: string
+          format: date-time
+          example: 11.01.2002 12:00
+        tags:
+          $ref: '#/components/schemas/tags'
+    space:
+      type: object
+      properties:
+        space_id:
+          type: integer
+          example: 1234
+        space_name:
+          type: string
+          example: test
+        space_description:
+          type: string
+          example: space for test
+        tags:
+          $ref: '#/components/schemas/tags'
+    tags:
+      type: array
+      items:
+        type: object
+        additionalProperties:
+          type: array
+          items:
+            type: string
+          example:
+            - '1'
+            - '2'
+            - '3'
         example:
-          - "1"
-          - "2"
-          - "3"
-      example:
-        course: ["math", "cs", "philosophy"]
+          course:
+            - math
+            - cs
+            - philosophy
