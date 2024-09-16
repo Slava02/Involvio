@@ -93,3 +93,12 @@ MIGRATE = $(PROJECT_BIN)/migrate
 new-migration: .install-migrate
 	$(MIGRATE) create -ext sql -dir ./migrations $(name)
 
+# ---------------------------------- GENERATIONS ---------------------------------
+
+.PHONY: generate
+generate:
+	go generate -skip='swagger generate server --target ../../../Involvio' ./...
+
+.PHONY: swag
+generate:
+	go run github.com/go-swagger/go-swagger/cmd/swagger@latest generate server --name=Involvio  --spec=docs/swagger2.yaml --api-package=api --model-package=internal/entity --default-scheme=http --main-package=Involvio --server-package=internal/handler/rest/v1/route --implementation-package=github.com/Slava02/Involvio/internal/app --regenerate-configureapi
