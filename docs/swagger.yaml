@@ -167,7 +167,7 @@ paths:
     delete:
       tags:
         - user
-      summary: delete user
+      summary: delete user (КАК УДАЛЯТЬ БЕЗ SPACE_ID)
       parameters:
         - name: userId
           in: path
@@ -303,8 +303,11 @@ components:
       properties:
         user:
           $ref: '#/components/schemas/user'
-        tags:
-          $ref: '#/components/schemas/tags'
+        forms:
+          type: array
+          items:
+            $ref: '#/components/schemas/form'
+
     listUsersResponse:
       type: object
       properties:
@@ -350,6 +353,16 @@ components:
           type: string
           format: date-time
           example: 11.01.2002 12:00
+
+    form:
+      type: object
+      properties:
+        spaceId:
+          type: integer
+          example: 123
+        tags:
+          $ref: '#/components/schemas/tags'
+
     event:
       type: object
       properties:
@@ -408,4 +421,5 @@ components:
           type: string
         example:
           course: math
+
 
