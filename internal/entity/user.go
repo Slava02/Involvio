@@ -1,13 +1,22 @@
 package entity
 
-import "google.golang.org/genproto/googleapis/type/datetime"
+import (
+	"time"
+)
 
 // User -.
 type User struct {
-	ID        int               `json:"id"       example:"1234"`
-	FirstName string            `json:"first_name"       example:"slava"`
-	LastName  string            `json:"last_name"       example:"zhuvaga"`
-	UserName  string            `json:"user_name"       example:"s1av4"`
-	PhotoURL  string            `json:"photo_url" example:"https://photo"`
-	AuthDate  datetime.DateTime `json:"auth_date"       example:"25.09.2002 12:00"`
+	ID        int       `doc:"User ID" json:"id"       example:"1234"`
+	FirstName string    `doc:"First name" json:"first_name"       example:"slava"`
+	LastName  string    `doc:"Last name" json:"last_name"       example:"zhuvaga"`
+	UserName  string    `doc:"Username" json:"user_name"       example:"s1av4"`
+	PhotoURL  string    `doc:"Photo URL" json:"photo_url" example:"https://photo"`
+	AuthDate  time.Time `doc:"Authorization date" json:"auth_date"       example:"25.09.2002 12:00"`
+	Forms     []Form    `doc:"User info and preferences in certain space" json:"forms"`
+}
+
+type Form struct {
+	SpaceID  int  `doc:"Space Id" json:"id"       example:"1234"`
+	UserTags Tags `doc:"User's tags" json:"user_tags"`
+	PairTags Tags `doc:"User's preference tags" json:"pair_tags"`
 }

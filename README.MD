@@ -87,8 +87,7 @@ erDiagram
 - PG_URL - ссылка для подключения к Postgres (по умолчанию - postgres://user:pass@localhost:5432/involvio)
 ### Запуск
 ```shell
-make compose-up
-make run
+export DB_PASSWORD=admin ENV_NAME=dev && make dc
 ```
 
 ## Тестирование

@@ -1,0 +1,22 @@
+{
+  "app": {
+    "name": "involvio",
+    "version": "0.0.1"
+  },
+  "rest": {
+    "port": "8000"
+  },
+  "tracing": {
+    "url": "jaeger:4317"
+  },
+  "db": {
+    "host": "postgres",
+    "port": 5432,
+    "user": "postgres",
+    "name": "involvio",
+    "pool_max": 2
+  },
+  "logger": {
+    "level": "DEBUG"
+  }
+}

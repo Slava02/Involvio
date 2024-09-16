@@ -360,7 +360,9 @@ components:
         spaceId:
           type: integer
           example: 123
-        tags:
+        user_tags:
+          $ref: '#/components/schemas/tags'
+        pair_tags:
           $ref: '#/components/schemas/tags'
 
     event:

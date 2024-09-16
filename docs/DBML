@@ -34,6 +34,7 @@ Table user_event {
 
 Table event {
   id integer [pk]
+  space_id int
   name varchar
   description varchar
   begin_date timestamp
@@ -41,10 +42,6 @@ Table event {
   tags jsonb
 }
 
-Table event_space {
-  space_id integer [pk]
-  event_id integer [pk]
-}
 
 Ref: user_space.user_id > user.id
 Ref: user_space.space_id > space.id
@@ -52,6 +49,8 @@ Ref: user_space.space_id > space.id
 Ref: user_event.user_id > user.id
 Ref: user_event.event_id > event.id
 
-Ref: event_space.event_id > event.id
-Ref: event_space.space_id > space.id
+Ref: event.space_id > space.id
+
+
+
 

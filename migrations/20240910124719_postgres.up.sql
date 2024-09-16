@@ -1,4 +1,20 @@
+SELECT 'up SQL query';
+
 BEGIN;
+
+SET statement_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = ON;
+SET check_function_bodies = FALSE;
+SET client_min_messages = WARNING;
+SET search_path = public, extensions;
+SET default_tablespace = '';
+SET default_with_oids = FALSE;
+
+-- EXTENSIONS --
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 
 CREATE TABLE "space" (
                          "id" integer PRIMARY KEY,
@@ -36,24 +52,20 @@ CREATE TABLE "user_event" (
 );
 
 CREATE TABLE "event" (
-                         "id" integer PRIMARY KEY,
-                         "name" varchar,
-                         "description" varchar,
-                         "begin_date" timestamp,
-                         "end_date" timestamp
+     "id" integer PRIMARY KEY,
+     "name" varchar,
+     "description" varchar,
+     "begin_date" timestamp,
+     "end_date" timestamp
 );
 
 ALTER TABLE "user_space" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
-
 ALTER TABLE "user_space" ADD FOREIGN KEY ("space_id") REFERENCES "space" ("id");
-
 ALTER TABLE "user_event" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
-
 ALTER TABLE "user_event" ADD FOREIGN KEY ("event_id") REFERENCES "event" ("id");
-
 ALTER TABLE "category_space" ADD FOREIGN KEY ("space_id") REFERENCES "space" ("id");
 
 
-
+SELECT 'down SQL query';
 
 COMMIT;

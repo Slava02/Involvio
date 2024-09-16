@@ -1,70 +1,95 @@
-include .env
-export
+PROJECT_DIR = $(shell pwd)
+PROJECT_BIN = $(PROJECT_DIR)/bin
+$(shell [ -f bin ] || mkdir -p $(PROJECT_BIN))
+PATH := $(PROJECT_BIN):$(PATH)
 
-LOCAL_BIN:=$(CURDIR)/bin
-PATH:=$(LOCAL_BIN):$(PATH)
+.PHONY: dc
+dc:
+	docker-compose up --remove-orphans --build
 
-# HELP =================================================================================================================
-# This will output the help for each task
-# thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
-.PHONY: help
+.PHONY: cleandc
+cleandc:
+	rm -rf pg_volume
+	docker-compose up --remove-orphans --build
 
-help: ## Display this help screen
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+.PHONY: postgres-init
+postgres-init:
+	docker run --name postgres -p 5433:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=admin -d postgres:15-alpine
 
-compose-up: ### Run docker-compose
-	docker-compose up --build -d postgres && docker-compose logs -f
-.PHONY: compose-up
+.PHONY: postgres-drop
+postgres-drop:
+	docker stop postgres
+	docker remove postgres
 
-compose-down: ### Down docker-compose
-	docker-compose down --remove-orphans
-.PHONY: compose-down
+.PHONY: postgres
+postgres:
+	docker exec -it postgres psql
 
-swag-v1: ### swag init
-	swag init -g internal/controller/http/v1/router.go
-.PHONY: swag-v1
+.PHONY: create-db
+create-db:
+	docker exec -it postgres createdb --username=postgres --owner=postgres demo
 
-run: swag-v1 ### swag run
-	go mod tidy && go mod download && \
-	DISABLE_SWAGGER_HTTP_HANDLER='' GIN_MODE=debug CGO_ENABLED=0 go run -tags migrate ./cmd/app
-.PHONY: run
+.PHONY: drop-db
+drop-db:
+	docker exec -it postgres dropdb demo
 
-docker-rm-volume: ### remove docker volume
-	docker volume rm involvio_pg-data
-.PHONY: docker-rm-volume
+.PHONY: docker
+docker:
+	docker build -t template .
+	docker run --rm \
+		--name template \
+		--network host \
+		-p 9000:9000 \
+		-e DB_PASSWORD=$(DB_PASSWORD) \
+		template
 
-linter-golangci: ### check by golangci linter
-	golangci-lint run
-.PHONY: linter-golangci
+# ----------------------------------- TESTING -----------------------------------
+.PHONY: tests
+tests:
+	go clean -testcache && go test ./...
+# ---------------------------------- PROFILING ----------------------------------
+.PHONY: cpuprof
+cpuprof:
+	( PPROF_TMPDIR=${PPROFDIR} go tool pprof -http :8081 -seconds 20 http://127.0.0.1:9000/debug/pprof/profile )
 
-linter-hadolint: ### check by hadolint linter
-	git ls-files --exclude='Dockerfile*' --ignored | xargs hadolint
-.PHONY: linter-hadolint
+.PHONY: memprof
+memprof:
+	( PPROF_TMPDIR=${PPROFDIR} go tool pprof -http :8081 http://127.0.0.1:9000/debug/pprof/heap )
 
-linter-dotenv: ### check by dotenv linter
-	dotenv-linter
-.PHONY: linter-dotenv
+# ---------------------------------- LINTING ------------------------------------
+GOLANGCI_LINT_VERSION = v1.60.3
+GOLANGCI_LINT = $(PROJECT_BIN)/golangci-lint
 
-test: ### run test
-	go test -v -cover -race ./internal/...
-.PHONY: test
+.PHONY: .install-golangci-lint
+.install-golangci-lint:
+	[ -f $(PROJECT_BIN)/golangci-lint ] || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(PROJECT_BIN) $(GOLANGCI_LINT_VERSION)
 
-mock: ### run mockgen
-	mockgen -source ./internal/usecase/interfaces.go -package usecase_test > ./internal/usecase/mocks_test.go
-.PHONY: mock
+.PHONY: lint
+lint: .install-golangci-lint
+	$(GOLANGCI_LINT) run ./... --config=./.golangci.yml
 
-migrate-create:  ### create new migration
-	migrate create -ext sql -dir migrations 'postgres'
-.PHONY: migrate-create
+.PHONY: lint-fast
+lint-fast: .install-golangci-lint
+	$(GOLANGCI_LINT) run ./... --fast --config=./.golangci.yml
 
-migrate-up: ### migration up
-	migrate -path migrations -database '$(PG_URL)?sslmode=disable' -verbose up
-.PHONY: migrate-up
+# ---------------------------------- MIGRATIONS ---------------------------------
+MIGRATE_VERSION = 4.17.1
+MIGRATE = $(PROJECT_BIN)/migrate
 
-migrate-down: ### migration down
-	migrate -path migrations -database '$(PG_URL)?sslmode=disable' -verbose down
-.PHONY: migrate-up
+.PHONY: .install-migrate
+.install-migrate:
+	@if [ ! -f $(MIGRATE) ]; then \
+		git clone https://github.com/golang-migrate/migrate.git ./.tmp;  \
+		cd ./.tmp/cmd/migrate; \
+		git checkout v$(MIGRATE_VERSION); \
+		go build; \
+		mv migrate* $(PROJECT_BIN); \
+		cd $(PROJECT_DIR); \
+		sleep 1; \
+		rm -rf .tmp; \
+	fi
 
-bin-deps:
-	GOBIN=$(LOCAL_BIN) go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
-	GOBIN=$(LOCAL_BIN) go install github.com/golang/mock/mockgen@latest
+.PHONY: new-migration
+new-migration: .install-migrate
+	$(MIGRATE) create -ext sql -dir ./migrations $(name)
+
