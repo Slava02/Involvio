@@ -100,7 +100,7 @@ generate:
 	go generate -skip='swagger generate server --target ../../../Involvio' ./...
 
 .PHONY: swag
-generate:
-	go run github.com/go-swagger/go-swagger/cmd/swagger generate server --name=involvio  --principal=entity.Principal --spec=docs/swagger2.yaml --api-package=api --model-package=internal/entity --default-scheme=http --main-package=involvio --server-package=internal/handler/v1/rest --implementation-package=internal/handler --regenerate-configureapi
-	# 	go run github.com/go-swagger/go-swagger/cmd/swagger@latest generate server --name=Involvio  --spec=docs/swagger2.yaml --api-package=api --model-package=internal/entity --default-scheme=http --main-package=Involvio --server-package=internal/handler/rest/v1/route --implementation-package=github.com/Slava02/Involvio/internal/app --regenerate-configureapi
+generate2:
+	go run github.com/go-swagger/go-swagger/cmd/swagger generate server --name=involvio  --principal=entity.Principal --spec=docs/swagger2.yaml --api-package=operations --model-package=internal/entity --default-scheme=http --main-package=involvio --server-package=internal/handler/route --implementation-package=github.com/Slava02/Involvio/internal/handler --regenerate-configureapi
+	# 	go run github.com/go-swagger/go-swagger/cmd/swagger@latest generate server --name=Involvio  --spec=docs/swagger2.yaml --api-package=api --model-package=internal/entity --default-scheme=http --main-package=Involvio --server-package=internal/handler/restapi/v1/route --implementation-package=github.com/Slava02/Involvio/internal/app --regenerate-configureapi
 	#// go:generate go run github.com/go-swagger/go-swagger/cmd/swagger generate server --name=alignfig --principal=entity.Principal --spec=swagger.yaml --api-package=api --model-package=../entity --default-scheme=http --main-package=../../../cmd/api/ --server-package=../route --implementation-package=gitlab.alignfig.com/alignfig/project-api/internal/app --regenerate-configureapi
