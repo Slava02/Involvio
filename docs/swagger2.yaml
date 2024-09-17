@@ -102,7 +102,7 @@ paths:
           description: Space not found
         500:
           description: Internal service error
-######################################################################
+  ######################################################################
   /events:
     post:
       tags:
@@ -189,11 +189,11 @@ paths:
           description: Event not found
         500:
           description: Internal service error
-######################################################################
+  ######################################################################
   /users:
     post:
       tags:
-        - user
+        - users
       summary: create user
       operationId: createUser
       consumes:
@@ -216,11 +216,11 @@ paths:
           description: Invalid data supplied
         500:
           description: Internal service error
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   /users/{userId}:
     get:
       tags:
-        - user
+        - users
       summary: show profile
       operationId: get user
       produces:
@@ -241,10 +241,10 @@ paths:
           description: User not found
         500:
           description: Internal service error
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     patch:
       tags:
-        - user
+        - users
       summary: update user form/info, promote/reduce user privilege
       operationId: updateUser
       consumes:
@@ -271,10 +271,10 @@ paths:
           description: User not found
         500:
           description: Internal service error
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     delete:
       tags:
-        - user
+        - users
       summary: delete user
       operationId: deleteUser
       consumes:
@@ -305,9 +305,9 @@ paths:
 #                             DEFINITIONS                            #
 ######################################################################
 definitions:
-######################################################################
-#                             REQUESTS                              #
-######################################################################
+  ######################################################################
+  #                             REQUESTS                              #
+  ######################################################################
   CreateSpaceReq:
     type: object
     properties:
@@ -325,7 +325,7 @@ definitions:
         example: space for test
       tags:
         $ref: '#/definitions/TagOptions'
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   CreateEventReq:
     type: object
     properties:
@@ -337,23 +337,23 @@ definitions:
         example: 1234
       event:
         $ref: '#/definitions/Event'
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   JoinEventReq:
     type: object
     properties:
       user_id:
         type: integer
         example: 1234
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   DeleteUserReq:
     type: object
     properties:
       space_id:
         type: integer
         example: 1234
-######################################################################
-#                             RESPONSES                              #
-######################################################################
+  ######################################################################
+  #                             RESPONSES                              #
+  ######################################################################
   EventInfoResp:
     type: object
     properties:
@@ -363,7 +363,7 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/User'
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   UserInfoResp:
     type: object
     properties:
@@ -373,9 +373,9 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/Form'
-######################################################################
-#                             ENTITIES                               #
-######################################################################
+  ######################################################################
+  #                             ENTITIES                               #
+  ######################################################################
   User:
     type: object
     properties:
@@ -398,7 +398,7 @@ definitions:
         type: string
         format: date-time
         example: 11.01.2002 12:00
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   Form:
     type: object
     properties:
@@ -415,7 +415,7 @@ definitions:
         $ref: '#/definitions/Tags'
       pair_tags:
         $ref: '#/definitions/Tags'
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   Event:
     type: object
     properties:
@@ -435,7 +435,7 @@ definitions:
         example: 11.01.2002 12:00
       tags:
         $ref: '#/definitions/Tags'
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   Space:
     type: object
     properties:
@@ -450,7 +450,7 @@ definitions:
         example: space for test
       tags:
         $ref: '#/definitions/TagOptions'
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   TagOptions:
     type: array
     items:
@@ -468,7 +468,7 @@ definitions:
           - math
           - cs
           - philosophy
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   Tags:
     type: array
     items:
@@ -479,8 +479,7 @@ definitions:
         course: math
 
 
-    
-    
+
 
 
 
