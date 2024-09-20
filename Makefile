@@ -31,7 +31,7 @@ create-db:
 
 .PHONY: drop-db
 drop-db:
-	docker exec -it postgres dropdb demo
+	docker exec -it postgres-1 dropdb demo
 
 .PHONY: docker
 docker:
@@ -91,7 +91,20 @@ MIGRATE = $(PROJECT_BIN)/migrate
 
 .PHONY: new-migration
 new-migration: .install-migrate
-	$(MIGRATE) create -ext sql -dir ./migrations $(name)
+	$(MIGRATE) create -ext sql -dir ./migrations pg_init
+
+.PHONY: migrate-create
+migrate-create:  ### create new migration
+	migrate create -ext sql -dir migrations 'pg_init'
+
+.PHONY: migrate-up
+migrate-up: ### migration up
+	migrate -path migrations -database 'postgresql://postgres:admin@localhost:5433/involvio?sslmode=disable' up
+
+.PHONY: migrate-down
+migrate-down: ### migration up
+	migrate -path migrations -database 'postgresql://postgres:admin@localhost:5433/involvio?sslmode=disable' down
+
 
 # ---------------------------------- GENERATIONS ---------------------------------
 
@@ -99,8 +112,6 @@ new-migration: .install-migrate
 generate:
 	go generate -skip='swagger generate server --target ../../../Involvio' ./...
 
-.PHONY: swag
-generate2:
-	go run github.com/go-swagger/go-swagger/cmd/swagger generate server --name=involvio  --principal=entity.Principal --spec=docs/swagger2.yaml --api-package=operations --model-package=internal/entity --default-scheme=http --main-package=involvio --server-package=internal/handler/route --implementation-package=github.com/Slava02/Involvio/internal/handler --regenerate-configureapi
-	# 	go run github.com/go-swagger/go-swagger/cmd/swagger@latest generate server --name=Involvio  --spec=docs/swagger2.yaml --api-package=api --model-package=internal/entity --default-scheme=http --main-package=Involvio --server-package=internal/handler/restapi/v1/route --implementation-package=github.com/Slava02/Involvio/internal/app --regenerate-configureapi
-	#// go:generate go run github.com/go-swagger/go-swagger/cmd/swagger generate server --name=alignfig --principal=entity.Principal --spec=swagger.yaml --api-package=api --model-package=../entity --default-scheme=http --main-package=../../../cmd/api/ --server-package=../route --implementation-package=gitlab.alignfig.com/alignfig/project-api/internal/app --regenerate-configureapi
+#.PHONY: generate2
+#generate2:
+#	go run github.com/go-swagger/go-swagger/cmd/swagger generate server --name=involvio  --principal=entity.Principal --spec=docs/swagger2.yaml --api-package=api --model-package=internal/entity --default-scheme=http --main-package=involvio --server-package=internal/route --implementation-package=github.com/Slava02/Involvio/internal/app --regenerate-configureapi

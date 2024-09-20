@@ -10,7 +10,7 @@ func SetupLogger(cfg *config.Config) {
 	var opts *slog.HandlerOptions
 	var logger *slog.Logger
 
-	slog.SetLogLoggerLevel(cfg.Level)
+	slog.SetLogLoggerLevel(cfg.Log.Level)
 
 	if os.Getenv("DEBUG") == "true" || os.Getenv("ENV_NAME") != "prod" {
 		opts = &slog.HandlerOptions{
