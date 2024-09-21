@@ -4,8 +4,8 @@ package app
 import (
 	"fmt"
 	"github.com/Slava02/Involvio/config"
+	"github.com/Slava02/Involvio/internal/app/route"
 	"github.com/Slava02/Involvio/pkg/database"
-	"github.com/Slava02/Involvio/version"
 	"github.com/gofiber/contrib/otelfiber/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
@@ -30,8 +30,6 @@ func NewApp() *App {
 }
 
 func Run(router *fiber.App, cfg *config.Config) {
-	version.PrintVersion(cfg)
-
 	// fiber middlewares
 	router.Use(logger.New())
 
@@ -62,7 +60,7 @@ func Run(router *fiber.App, cfg *config.Config) {
 	}
 
 	// Setup routes
-	setupRoutes(router, pg)
+	route.SetupRoutes(router, pg)
 
 	PrintSystemData()
 	PrintMemoryInfo()

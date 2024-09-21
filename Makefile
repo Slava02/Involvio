@@ -73,23 +73,8 @@ lint-fast: .install-golangci-lint
 	$(GOLANGCI_LINT) run ./... --fast --config=./.golangci.yml
 
 # ---------------------------------- MIGRATIONS ---------------------------------
-MIGRATE_VERSION = 4.17.1
-MIGRATE = $(PROJECT_BIN)/migrate
-
-.PHONY: .install-migrate
-.install-migrate:
-	@if [ ! -f $(MIGRATE) ]; then \
-		git clone https://github.com/golang-migrate/migrate.git ./.tmp;  \
-		cd ./.tmp/cmd/migrate; \
-		git checkout v$(MIGRATE_VERSION); \
-		go build; \
-		mv migrate* $(PROJECT_BIN); \
-		cd $(PROJECT_DIR); \
-		sleep 1; \
-		rm -rf .tmp; \
-	fi
 
 .PHONY: new-migration
-new-migration: .install-migrate
-	$(MIGRATE) create -ext sql -dir ./migrations $(name)
+new-migration:
+	migrate create -ext sql -dir ./migrations involvio_pg
 

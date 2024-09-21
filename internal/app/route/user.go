@@ -1,54 +1,36 @@
-package app
+package route
 
 import (
 	"github.com/Slava02/Involvio/internal/entity"
-	v1 "github.com/Slava02/Involvio/internal/handler/rest/v1"
+	"github.com/Slava02/Involvio/internal/handler/rest/v1/user"
 	"github.com/Slava02/Involvio/internal/usecase"
 	"github.com/Slava02/Involvio/internal/usecase/repository"
 	"github.com/Slava02/Involvio/pkg/database"
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/danielgtaylor/huma/v2/adapters/humafiber"
-	"github.com/gofiber/fiber/v2"
 	"net/http"
 	"reflect"
 	"sync"
 )
 
-func setupRoutes(router *fiber.App, pg *database.Postgres) {
-	openapiConfig := huma.DefaultConfig("Clean Architecture Template", "1.0.0")
-	openapiConfig.Components.SecuritySchemes = map[string]*huma.SecurityScheme{
-		"auth": {
-			Type:         "rest",
-			Scheme:       "bearer",
-			BearerFormat: "JWT",
-		},
-	}
-	openapiConfig.Security = []map[string][]string{
-		{"auth": {""}},
-	}
-
-	api := humafiber.New(router, openapiConfig)
-
-	setupUserRoutes(api, pg)
-}
-
 //nolint:funlen
 func setupUserRoutes(api huma.API, pg *database.Postgres) {
 	// Initialize use cases
 	o := sync.Once{}
-	userUseCase := usecase.NewUserUseCase(repository.NewUserRepository(&o, pg.Pool))
+	userUseCase := usecase.NewUserUseCase(repository.NewUserRepository(&o, pg))
 
 	// Initialize handlers
-	userHandler := v1.NewUserHandler(userUseCase)
+	userHandler := user.NewUserHandler(userUseCase)
 
 	registry := huma.NewMapRegistry("#/components/schemas/", huma.DefaultSchemaNamer)
 
-	createUserSchema := huma.SchemaFromType(registry, reflect.TypeOf(&entity.User{}))
+	userSchema := huma.SchemaFromType(registry, reflect.TypeOf(&entity.User{}))
+	formSchema := huma.SchemaFromType(registry, reflect.TypeOf(&entity.Form{}))
+	userWithFormsSchema := huma.SchemaFromType(registry, reflect.TypeOf(&user.UserWithFormsResponse{}))
 
 	huma.Register(api, huma.Operation{
-		OperationID:   "Create user",
+		OperationID:   "CreateUser",
 		Method:        http.MethodPost,
-		Path:          "/user",
+		Path:          "/users",
 		Summary:       "create new user",
 		Description:   "Create a new user record.",
 		Tags:          []string{"Users"},
@@ -58,7 +40,7 @@ func setupUserRoutes(api huma.API, pg *database.Postgres) {
 				Description: "IUserUC created",
 				Content: map[string]*huma.MediaType{
 					"application/json": {
-						Schema: createUserSchema,
+						Schema: userSchema,
 					},
 				},
 				Headers: map[string]*huma.Param{
@@ -86,12 +68,10 @@ func setupUserRoutes(api huma.API, pg *database.Postgres) {
 		},
 	}, userHandler.CreateUser)
 
-	userByIDSchema := huma.SchemaFromType(registry, reflect.TypeOf(&v1.UserResponse{}))
-
 	huma.Register(api, huma.Operation{
-		OperationID: "Get user by id",
+		OperationID: "GetUser",
 		Method:      http.MethodGet,
-		Path:        "/user/{id}",
+		Path:        "/users/{id}",
 		Summary:     "user by id",
 		Description: "Get a user by id.",
 		Tags:        []string{"Users"},
@@ -100,7 +80,7 @@ func setupUserRoutes(api huma.API, pg *database.Postgres) {
 				Description: "IUserUC response",
 				Content: map[string]*huma.MediaType{
 					"application/json": {
-						Schema: userByIDSchema,
+						Schema: userWithFormsSchema,
 					},
 				},
 			},
@@ -145,41 +125,12 @@ func setupUserRoutes(api huma.API, pg *database.Postgres) {
 				},
 			},
 		},
-	}, userHandler.FindUserByID)
+	}, userHandler.GetUserWithForms)
 
 	huma.Register(api, huma.Operation{
-		OperationID:   "Delete user",
-		Method:        http.MethodDelete,
-		Path:          "/user/{id}",
-		Summary:       "delete user",
-		Description:   "Delete a user by ID.",
-		Tags:          []string{"Users"},
-		DefaultStatus: http.StatusNoContent,
-		Responses: map[string]*huma.Response{
-			"204": {
-				Description: "IUserUC deleted",
-				Content:     map[string]*huma.MediaType{},
-			},
-			"404": {
-				Description: "IUserUC not found",
-				Content: map[string]*huma.MediaType{
-					"application/json": {
-						Schema: &huma.Schema{
-							Type: "object",
-							Properties: map[string]*huma.Schema{
-								"error": {Type: "string"},
-							},
-						},
-					},
-				},
-			},
-		},
-	}, userHandler.DeleteUser)
-
-	huma.Register(api, huma.Operation{
-		OperationID: "Update user",
-		Method:      http.MethodPatch,
-		Path:        "/user/{id}",
+		OperationID: "UpdateUser",
+		Method:      http.MethodPut,
+		Path:        "/users/{id}",
 		Summary:     "update user",
 		Description: "Update an existing user by ID.",
 		Tags:        []string{"Users"},
@@ -188,19 +139,7 @@ func setupUserRoutes(api huma.API, pg *database.Postgres) {
 				Description: "IUserUC updated",
 				Content: map[string]*huma.MediaType{
 					"application/json": {
-						Schema: &huma.Schema{
-							Type: "object",
-							Properties: map[string]*huma.Schema{
-								"body": {
-									Type: "object",
-									Properties: map[string]*huma.Schema{
-										"name": {Type: "string"},
-									},
-									Required: []string{"name"},
-								},
-							},
-							Required: []string{"body"},
-						},
+						Schema: userSchema,
 					},
 				},
 			},
@@ -233,4 +172,153 @@ func setupUserRoutes(api huma.API, pg *database.Postgres) {
 			},
 		},
 	}, userHandler.UpdateUser)
+
+	huma.Register(api, huma.Operation{
+		OperationID:   "DeleteUserForm",
+		Method:        http.MethodDelete,
+		Path:          "/users/{userId}/{spaceId}",
+		Summary:       "delete user",
+		Description:   "Delete a user by ID.",
+		Tags:          []string{"Users"},
+		DefaultStatus: http.StatusNoContent,
+		Responses: map[string]*huma.Response{
+			"204": {
+				Description: "IUserUC deleted",
+				Content:     map[string]*huma.MediaType{},
+			},
+			"404": {
+				Description: "IUserUC not found",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{
+							Type: "object",
+							Properties: map[string]*huma.Schema{
+								"error": {Type: "string"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, userHandler.DeleteUser)
+
+	huma.Register(api, huma.Operation{
+		OperationID:   "GetUserForm",
+		Method:        http.MethodGet,
+		Path:          "/users/{userId}/{spaceId}",
+		Summary:       "get user form in space",
+		Description:   "returns user form in provided space",
+		Tags:          []string{"Users"},
+		DefaultStatus: http.StatusNoContent,
+		Responses: map[string]*huma.Response{
+			"200": {
+				Description: "IUserUC response",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: formSchema,
+					},
+				},
+			},
+			"400": {
+				Description: "Invalid request",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{
+							Type: "object",
+							Properties: map[string]*huma.Schema{
+								"message": {Type: "string"},
+								"field":   {Type: "string"},
+							},
+						},
+					},
+				},
+			},
+			"404": {
+				Description: "IUserUC not found",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{
+							Type: "object",
+							Properties: map[string]*huma.Schema{
+								"error": {Type: "string"},
+							},
+						},
+					},
+				},
+			},
+			"500": {
+				Description: "Internal server error",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{
+							Type: "object",
+							Properties: map[string]*huma.Schema{
+								"error": {Type: "string"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, userHandler.GetForm)
+
+	huma.Register(api, huma.Operation{
+		OperationID:   "UpdateUserForm",
+		Method:        http.MethodPut,
+		Path:          "/users/{userId}/{spaceId}",
+		Summary:       "update user form in space",
+		Description:   "returns updated user form in provided space",
+		Tags:          []string{"Users"},
+		DefaultStatus: http.StatusNoContent,
+		Responses: map[string]*huma.Response{
+			"200": {
+				Description: "IUserUC response",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: formSchema,
+					},
+				},
+			},
+			"400": {
+				Description: "Invalid request",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{
+							Type: "object",
+							Properties: map[string]*huma.Schema{
+								"message": {Type: "string"},
+								"field":   {Type: "string"},
+							},
+						},
+					},
+				},
+			},
+			"404": {
+				Description: "IUserUC not found",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{
+							Type: "object",
+							Properties: map[string]*huma.Schema{
+								"error": {Type: "string"},
+							},
+						},
+					},
+				},
+			},
+			"500": {
+				Description: "Internal server error",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{
+							Type: "object",
+							Properties: map[string]*huma.Schema{
+								"error": {Type: "string"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, userHandler.UpdateForm)
 }

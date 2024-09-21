@@ -6,17 +6,15 @@ import (
 	"github.com/Slava02/Involvio/pkg/database"
 	"github.com/pkg/errors"
 	"sync"
+	"time"
 )
 
 var (
 	ErrInvalidInputData = errors.New("invalid input data")
+	ErrUserNotFound     = errors.New("user not found")
 )
 
-type UserRepository struct {
-	db database.Database
-}
-
-func NewUserRepository(once *sync.Once, db database.Database) *UserRepository {
+func NewUserRepository(once *sync.Once, db *database.Postgres) *UserRepository {
 	var repo *UserRepository
 	once.Do(func() {
 		repo = &UserRepository{db: db}
@@ -25,22 +23,41 @@ func NewUserRepository(once *sync.Once, db database.Database) *UserRepository {
 	return repo
 }
 
-func (r *UserRepository) GetUserByID(ctx context.Context, id int) (*entity.User, error) {
-	var user entity.User
-	return &user, nil
+type UserRepository struct {
+	db *database.Postgres
 }
 
-func (r *UserRepository) InsertUser(ctx context.Context, input *entity.User) (*entity.User, error) {
-
-	return input, nil
+func (r *UserRepository) GetUserData(ctx context.Context, id int) (*entity.User, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
-func (r *UserRepository) UpdateUser(ctx context.Context, input *entity.User) (*entity.User, error) {
-
-	return input, nil
+func (r *UserRepository) GetUserForms(ctx context.Context, userId int) ([]*entity.Form, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
-func (r *UserRepository) DeleteUser(ctx context.Context, input *entity.User) error {
+func (r *UserRepository) InsertUser(ctx context.Context, firstName, lastName, userName, photoURL string, authDate time.Time) (*entity.User, error) {
+	//TODO implement me
+	panic("implement me")
+}
 
-	return nil
+func (r *UserRepository) UpdateUser(ctx context.Context, id int, firstName, lastName, userName, photoURL string) (*entity.User, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r *UserRepository) DeleteUser(ctx context.Context, userId, spaceId int) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r *UserRepository) GetForm(ctx context.Context, userId, spaceId int) (*entity.Form, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r *UserRepository) UpdateForm(ctx context.Context, form *entity.Form) (*entity.Form, error) {
+	//TODO implement me
+	panic("implement me")
 }
