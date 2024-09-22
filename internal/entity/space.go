@@ -14,28 +14,6 @@ type Space struct {
 	Tags        Tags   `json:"tags"`
 }
 
-type CreateSpaceRequest struct {
-	AdminId int  `json:"admin_id"`
-	Tags    Tags `json:"tags"`
-}
-
-type SpaceInfoReq struct {
-	Space Space `json:"space"`
-}
-
-type JoinSpaceReq struct {
-	SpaceId int  `json:"spaceId"`
-	User    User `json:"user"`
-}
-
-type CreateSpaceResp struct {
-	SpaceId int `json:"spaceId"`
-}
-
-type ListSpacesResp struct {
-	Spaces []Space `json:"spaces"`
-}
-
 type Tags map[string]interface{}
 
 func (a Tags) Value() (driver.Value, error) {

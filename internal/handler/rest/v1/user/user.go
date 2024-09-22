@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/Slava02/Involvio/internal/entity"
 	"github.com/Slava02/Involvio/internal/usecase"
+	"github.com/Slava02/Involvio/internal/usecase/commands"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	"time"
@@ -12,12 +13,12 @@ import (
 )
 
 type IUserUseCase interface {
-	GetUser(ctx context.Context, cmd usecase.UserByIdCommand) (*entity.User, []*entity.Form, error)
-	CreateUser(ctx context.Context, cmd usecase.CreateUserCommand) (*entity.User, error)
-	UpdateUser(ctx context.Context, cmd usecase.UpdateUserCommand) (*entity.User, error)
-	DeleteUser(ctx context.Context, cmd usecase.FormByIdCommand) error
-	GetForm(ctx context.Context, cmd usecase.FormByIdCommand) (*entity.Form, error)
-	UpdateForm(ctx context.Context, cmd usecase.UpdateFormCommand) (*entity.Form, error)
+	GetUser(ctx context.Context, cmd commands.UserByIdCommand) (*entity.User, []*entity.Form, error)
+	CreateUser(ctx context.Context, cmd commands.CreateUserCommand) (*entity.User, error)
+	UpdateUser(ctx context.Context, cmd commands.UpdateUserCommand) (*entity.User, error)
+	DeleteUser(ctx context.Context, cmd commands.FormByIdCommand) error
+	GetForm(ctx context.Context, cmd commands.FormByIdCommand) (*entity.Form, error)
+	UpdateForm(ctx context.Context, cmd commands.UpdateFormCommand) (*entity.Form, error)
 }
 
 var _ IUserUseCase = (*usecase.UserUseCase)(nil)
@@ -37,7 +38,7 @@ func (uh *UserHandler) GetUserWithForms(ctx context.Context, req *UserByIdReques
 	_, span := tracer.Start(ctx, "FindUserByID", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	cmd := usecase.UserByIdCommand{ID: req.ID}
+	cmd := commands.UserByIdCommand{ID: req.ID}
 
 	user, forms, err := uh.userUC.GetUser(ctx, cmd)
 	if user == nil && err == nil {
@@ -56,7 +57,7 @@ func (uh *UserHandler) CreateUser(ctx context.Context, req *CreateUserRequest) (
 	_, span := tracer.Start(ctx, "CreateUser", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	cmd := usecase.CreateUserCommand{
+	cmd := commands.CreateUserCommand{
 		FirstName: req.Body.FirstName,
 		LastName:  req.Body.LastName,
 		UserName:  req.Body.UserName,
@@ -79,7 +80,7 @@ func (uh *UserHandler) UpdateUser(ctx context.Context, req *UpdateUserRequest) (
 	_, span := tracer.Start(ctx, "UpdateUser", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	cmd := usecase.UpdateUserCommand{
+	cmd := commands.UpdateUserCommand{
 		ID:        req.ID,
 		FirstName: req.Body.FirstName,
 		LastName:  req.Body.LastName,
@@ -103,7 +104,7 @@ func (uh *UserHandler) DeleteUser(ctx context.Context, req *DeleteUserRequest) (
 	_, span := tracer.Start(ctx, "DeleteUser", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	cmd := usecase.FormByIdCommand{UserID: req.UserId, SpaceID: req.SpaceId}
+	cmd := commands.FormByIdCommand{UserID: req.UserId, SpaceID: req.SpaceId}
 
 	err := uh.userUC.DeleteUser(ctx, cmd)
 	if err != nil {
@@ -118,7 +119,7 @@ func (uh *UserHandler) GetForm(ctx context.Context, req *FormByIdRequest) (*Form
 	_, span := tracer.Start(ctx, "FindUserFormByID", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	cmd := usecase.FormByIdCommand{UserID: req.UserID, SpaceID: req.SpaceID}
+	cmd := commands.FormByIdCommand{UserID: req.UserID, SpaceID: req.SpaceID}
 
 	form, err := uh.userUC.GetForm(ctx, cmd)
 	if err != nil {
@@ -135,7 +136,7 @@ func (uh *UserHandler) UpdateForm(ctx context.Context, req *UpdateFormRequest) (
 	_, span := tracer.Start(ctx, "FindUserFormByID", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	cmd := usecase.UpdateFormCommand{Form: &entity.Form{
+	cmd := commands.UpdateFormCommand{Form: &entity.Form{
 		UserID:   req.UserID,
 		SpaceID:  req.SpaceID,
 		Admin:    req.Body.Admin,

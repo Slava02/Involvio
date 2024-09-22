@@ -65,6 +65,19 @@ func setupUserRoutes(api huma.API, pg *database.Postgres) {
 					},
 				},
 			},
+			"500": {
+				Description: "Internal server error",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{
+							Type: "object",
+							Properties: map[string]*huma.Schema{
+								"error": {Type: "string"},
+							},
+						},
+					},
+				},
+			},
 		},
 	}, userHandler.CreateUser)
 
@@ -170,6 +183,19 @@ func setupUserRoutes(api huma.API, pg *database.Postgres) {
 					},
 				},
 			},
+			"500": {
+				Description: "Internal server error",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{
+							Type: "object",
+							Properties: map[string]*huma.Schema{
+								"error": {Type: "string"},
+							},
+						},
+					},
+				},
+			},
 		},
 	}, userHandler.UpdateUser)
 
@@ -188,6 +214,19 @@ func setupUserRoutes(api huma.API, pg *database.Postgres) {
 			},
 			"404": {
 				Description: "IUserUC not found",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{
+							Type: "object",
+							Properties: map[string]*huma.Schema{
+								"error": {Type: "string"},
+							},
+						},
+					},
+				},
+			},
+			"500": {
+				Description: "Internal server error",
 				Content: map[string]*huma.MediaType{
 					"application/json": {
 						Schema: &huma.Schema{

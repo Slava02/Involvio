@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Slava02/Involvio/internal/entity"
+	"github.com/Slava02/Involvio/internal/usecase/commands"
 	"time"
 )
 
@@ -25,7 +26,7 @@ type UserUseCase struct {
 	userRepo IUserRepository
 }
 
-func (uc *UserUseCase) GetUser(ctx context.Context, cmd UserByIdCommand) (*entity.User, []*entity.Form, error) {
+func (uc *UserUseCase) GetUser(ctx context.Context, cmd commands.UserByIdCommand) (*entity.User, []*entity.Form, error) {
 	userData, err := uc.userRepo.GetUserData(ctx, cmd.ID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("%w", err)
@@ -39,7 +40,7 @@ func (uc *UserUseCase) GetUser(ctx context.Context, cmd UserByIdCommand) (*entit
 	return userData, userForms, nil
 }
 
-func (uc *UserUseCase) DeleteUser(ctx context.Context, cmd FormByIdCommand) error {
+func (uc *UserUseCase) DeleteUser(ctx context.Context, cmd commands.FormByIdCommand) error {
 	_, err := uc.userRepo.GetUserData(ctx, cmd.UserID)
 	if err != nil {
 		return fmt.Errorf("%w", err)
@@ -53,7 +54,7 @@ func (uc *UserUseCase) DeleteUser(ctx context.Context, cmd FormByIdCommand) erro
 	return nil
 }
 
-func (uc *UserUseCase) GetForm(ctx context.Context, cmd FormByIdCommand) (*entity.Form, error) {
+func (uc *UserUseCase) GetForm(ctx context.Context, cmd commands.FormByIdCommand) (*entity.Form, error) {
 	form, err := uc.userRepo.GetForm(ctx, cmd.UserID, cmd.SpaceID)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
@@ -62,7 +63,7 @@ func (uc *UserUseCase) GetForm(ctx context.Context, cmd FormByIdCommand) (*entit
 	return form, nil
 }
 
-func (uc *UserUseCase) UpdateForm(ctx context.Context, cmd UpdateFormCommand) (*entity.Form, error) {
+func (uc *UserUseCase) UpdateForm(ctx context.Context, cmd commands.UpdateFormCommand) (*entity.Form, error) {
 	_, err := uc.userRepo.GetUserData(ctx, cmd.UserID)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
@@ -76,7 +77,7 @@ func (uc *UserUseCase) UpdateForm(ctx context.Context, cmd UpdateFormCommand) (*
 	return form, nil
 }
 
-func (uc *UserUseCase) CreateUser(ctx context.Context, cmd CreateUserCommand) (*entity.User, error) {
+func (uc *UserUseCase) CreateUser(ctx context.Context, cmd commands.CreateUserCommand) (*entity.User, error) {
 	user, err := uc.userRepo.InsertUser(ctx, cmd.FirstName, cmd.LastName, cmd.UserName, cmd.PhotoURL, cmd.AuthDate)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
@@ -85,7 +86,7 @@ func (uc *UserUseCase) CreateUser(ctx context.Context, cmd CreateUserCommand) (*
 	return user, nil
 }
 
-func (uc *UserUseCase) UpdateUser(ctx context.Context, cmd UpdateUserCommand) (*entity.User, error) {
+func (uc *UserUseCase) UpdateUser(ctx context.Context, cmd commands.UpdateUserCommand) (*entity.User, error) {
 	_, err := uc.userRepo.GetUserData(ctx, cmd.ID)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)

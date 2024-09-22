@@ -1,4 +1,4 @@
-package usecase
+package commands
 
 import (
 	"github.com/Slava02/Involvio/internal/entity"

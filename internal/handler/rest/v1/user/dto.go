@@ -35,8 +35,8 @@ type (
 	}
 
 	DeleteUserRequest struct {
-		UserId  int `path:"id" maxLength:"30" example:"1" doc:"user id"`
-		SpaceId int `path:"id" maxLength:"30" example:"1" doc:"space id"`
+		UserId  int `path:"userId" maxLength:"30" example:"123" doc:"user id"`
+		SpaceId int `path:"spaceId" maxLength:"30" example:"123" doc:"space id"`
 	}
 
 	CreateUserRequest struct {
@@ -59,13 +59,13 @@ type (
 	}
 
 	FormByIdRequest struct {
-		UserID  int `path:"id" maxLength:"30" example:"1" doc:"user id"`
-		SpaceID int `path:"id" maxLength:"30" example:"1" doc:"user id"`
+		UserID  int `path:"userId" maxLength:"30" example:"1" doc:"user id"`
+		SpaceID int `path:"spaceId" maxLength:"30" example:"1" doc:"space id"`
 	}
 
 	UpdateFormRequest struct {
-		UserID  int `path:"id" maxLength:"30" example:"1" doc:"user id"`
-		SpaceID int `path:"id" maxLength:"30" example:"1" doc:"user id"`
+		UserID  int `path:"userId" maxLength:"30" example:"1" doc:"user id"`
+		SpaceID int `path:"spaceId" maxLength:"30" example:"1" doc:"space id"`
 		Body    struct {
 			Admin    bool
 			Creator  bool

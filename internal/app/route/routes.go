@@ -23,5 +23,5 @@ func SetupRoutes(router *fiber.App, pg *database.Postgres) {
 	api := humafiber.New(router, openapiConfig)
 
 	setupUserRoutes(api, pg)
-	//setupSpaceRoutes(api, pg)
+	setupSpaceRoutes(api, pg)
 }

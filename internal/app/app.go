@@ -19,6 +19,7 @@ import (
 )
 
 // Run creates objects via constructors.
+// TODO: добавить внедрение зависимостей
 type App struct {
 	Server *fiber.App
 }
