@@ -14,7 +14,7 @@ type Space struct {
 	Tags        Tags   `json:"tags"`
 }
 
-type Tags map[string]interface{}
+type Tags []map[string]interface{}
 
 func (a Tags) Value() (driver.Value, error) {
 	return json.Marshal(a)

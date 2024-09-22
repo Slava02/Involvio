@@ -41,12 +41,7 @@ func (uc *UserUseCase) GetUser(ctx context.Context, cmd commands.UserByIdCommand
 }
 
 func (uc *UserUseCase) DeleteUser(ctx context.Context, cmd commands.FormByIdCommand) error {
-	_, err := uc.userRepo.GetUserData(ctx, cmd.UserID)
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-
-	err = uc.userRepo.DeleteUser(ctx, cmd.UserID, cmd.SpaceID)
+	err := uc.userRepo.DeleteUser(ctx, cmd.UserID, cmd.SpaceID)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
@@ -64,11 +59,6 @@ func (uc *UserUseCase) GetForm(ctx context.Context, cmd commands.FormByIdCommand
 }
 
 func (uc *UserUseCase) UpdateForm(ctx context.Context, cmd commands.UpdateFormCommand) (*entity.Form, error) {
-	_, err := uc.userRepo.GetUserData(ctx, cmd.UserID)
-	if err != nil {
-		return nil, fmt.Errorf("%w", err)
-	}
-
 	form, err := uc.userRepo.UpdateForm(ctx, cmd.Form)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
@@ -87,11 +77,6 @@ func (uc *UserUseCase) CreateUser(ctx context.Context, cmd commands.CreateUserCo
 }
 
 func (uc *UserUseCase) UpdateUser(ctx context.Context, cmd commands.UpdateUserCommand) (*entity.User, error) {
-	_, err := uc.userRepo.GetUserData(ctx, cmd.ID)
-	if err != nil {
-		return nil, fmt.Errorf("%w", err)
-	}
-
 	user, err := uc.userRepo.UpdateUser(ctx, cmd.ID, cmd.FirstName, cmd.LastName, cmd.UserName, cmd.PhotoURL)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)

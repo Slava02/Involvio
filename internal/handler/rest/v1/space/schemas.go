@@ -12,24 +12,24 @@ func ToSpaceOutputFromEntity(space *entity.Space) *SpaceResponse {
 type (
 	JoinSpaceRequest struct {
 		Body struct {
-			SpaceId int
-			UserId  int
+			SpaceId int `json:"spaceId" example:"123" doc:"Space ID"`
+			UserId  int `json:"userId" example:"123" doc:"Space ID"`
 		}
 	}
 
 	CreateSpaceRequest struct {
 		Body struct {
-			Name        string
-			Description string
-			Tags        entity.Tags
+			Name        string      `json:"name" example:"MAI" doc:"Space Name"`
+			Description string      `json:"description" example:"university" doc:"Space description"`
+			Tags        entity.Tags `json:"tags" doc:"Tags options for this space"`
 		}
 	}
 
 	UpdateSpaceRequest struct {
 		ID   int `path:"id" maxLength:"30" example:"1" doc:"space id"`
 		Body struct {
-			Name        string
-			Description string
+			Name        string `json:"name" example:"MAI" doc:"Space Name"`
+			Description string `json:"description" example:"university" doc:"Space description"`
 		}
 	}
 

@@ -13,7 +13,7 @@ import (
 type ISpaceUseCase interface {
 	CreateSpace(ctx context.Context, cmd commands.SpaceCommand) (*entity.Space, error)
 	GetSpace(ctx context.Context, cmd commands.SpaceByIdCommand) (*entity.Space, error)
-	JoinSpace(ctx context.Context, cmd commands.JoinSpaceCommand) (*entity.Space, error)
+	JoinSpace(ctx context.Context, cmd commands.JoinSpaceCommand) error
 	UpdateSpace(ctx context.Context, cmd commands.UpdateSpaceCommand) (*entity.Space, error)
 	DeleteSpace(ctx context.Context, cmd commands.SpaceByIdCommand) error
 }
@@ -70,7 +70,7 @@ func (sh *SpaceHandler) GetSpace(ctx context.Context, req *SpaceByIdRequest) (*S
 	return resp, nil
 }
 
-func (sh *SpaceHandler) JoinSpace(ctx context.Context, req *JoinSpaceRequest) (*SpaceResponse, error) {
+func (sh *SpaceHandler) JoinSpace(ctx context.Context, req *JoinSpaceRequest) (*struct{}, error) {
 	tracer := otel.Tracer(tracerName)
 	_, span := tracer.Start(ctx, "JoinSpace", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
@@ -80,14 +80,12 @@ func (sh *SpaceHandler) JoinSpace(ctx context.Context, req *JoinSpaceRequest) (*
 		UserID:  req.Body.UserId,
 	}
 
-	space, err := sh.spaceUC.JoinSpace(ctx, cmd)
+	err := sh.spaceUC.JoinSpace(ctx, cmd)
 	if err != nil {
 		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
-	resp := ToSpaceOutputFromEntity(space)
-
-	return resp, nil
+	return &struct{}{}, nil
 }
 
 func (sh *SpaceHandler) UpdateSpace(ctx context.Context, req *UpdateSpaceRequest) (*SpaceResponse, error) {

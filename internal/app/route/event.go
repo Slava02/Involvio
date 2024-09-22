@@ -2,7 +2,7 @@ package route
 
 import (
 	"github.com/Slava02/Involvio/internal/entity"
-	"github.com/Slava02/Involvio/internal/handler/rest/v1/space"
+	"github.com/Slava02/Involvio/internal/handler/rest/v1/event"
 	"github.com/Slava02/Involvio/internal/usecase"
 	"github.com/Slava02/Involvio/internal/usecase/repository"
 	"github.com/Slava02/Involvio/pkg/database"
@@ -13,34 +13,34 @@ import (
 )
 
 //nolint:funlen
-func setupSpaceRoutes(api huma.API, pg *database.Postgres) {
+func setupEventRoutes(api huma.API, pg *database.Postgres) {
 	o := sync.Once{}
-	spaceUseCase := usecase.NewSpaceUseCase(repository.NewSpaceRepository(&o, pg))
+	eventUseCase := usecase.NewEventUseCase(repository.NewEventRepository(&o, pg))
 
-	spaceHandler := space.NewSpaceHandler(spaceUseCase)
+	eventHandler := event.NewEventHandler(eventUseCase)
 
 	registry := huma.NewMapRegistry("#/components/schemas/", huma.DefaultSchemaNamer)
-	spaceSchema := huma.SchemaFromType(registry, reflect.TypeOf(&entity.Space{}))
+	eventSchema := huma.SchemaFromType(registry, reflect.TypeOf(&entity.Event{}))
 
 	huma.Register(api, huma.Operation{
-		OperationID:   "CreateSpace",
+		OperationID:   "CreateEvent",
 		Method:        http.MethodPost,
-		Path:          "/spaces",
-		Summary:       "create new space",
-		Description:   "Create a new space record.",
-		Tags:          []string{"Spaces"},
+		Path:          "/events",
+		Summary:       "create new event",
+		Description:   "Create a new event record.",
+		Tags:          []string{"Events"},
 		DefaultStatus: http.StatusCreated,
 		Responses: map[string]*huma.Response{
 			"201": {
-				Description: "ISpaceUC created",
+				Description: "IEventUC created",
 				Content: map[string]*huma.MediaType{
 					"application/json": {
-						Schema: spaceSchema,
+						Schema: eventSchema,
 					},
 				},
 				Headers: map[string]*huma.Param{
 					"Location": {
-						Description: "URL of the newly created space",
+						Description: "URL of the newly created event",
 						Schema:      &huma.Schema{Type: "string"},
 						Required:    true,
 					},
@@ -74,21 +74,21 @@ func setupSpaceRoutes(api huma.API, pg *database.Postgres) {
 				},
 			},
 		},
-	}, spaceHandler.CreateSpace)
+	}, eventHandler.CreateEvent)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "GetSpace",
+		OperationID: "GetEvent",
 		Method:      http.MethodGet,
-		Path:        "/spaces/{id}",
-		Summary:     "space by id",
-		Description: "Get space by id.",
-		Tags:        []string{"Spaces"},
+		Path:        "/events/{id}",
+		Summary:     "event by id",
+		Description: "Get event by id.",
+		Tags:        []string{"Events"},
 		Responses: map[string]*huma.Response{
 			"200": {
-				Description: "ISpaceUC response",
+				Description: "IEventUC response",
 				Content: map[string]*huma.MediaType{
 					"application/json": {
-						Schema: spaceSchema,
+						Schema: eventSchema,
 					},
 				},
 			},
@@ -107,7 +107,7 @@ func setupSpaceRoutes(api huma.API, pg *database.Postgres) {
 				},
 			},
 			"404": {
-				Description: "ISpaceUC not found",
+				Description: "IEventUC not found",
 				Content: map[string]*huma.MediaType{
 					"application/json": {
 						Schema: &huma.Schema{
@@ -133,128 +133,20 @@ func setupSpaceRoutes(api huma.API, pg *database.Postgres) {
 				},
 			},
 		},
-	}, spaceHandler.GetSpace)
+	}, eventHandler.GetEvent)
 
 	huma.Register(api, huma.Operation{
-		OperationID:   "DeleteSpace",
-		Method:        http.MethodDelete,
-		Path:          "/spaces/{id}",
-		Summary:       "delete space",
-		Description:   "delete space",
-		Tags:          []string{"Spaces"},
-		DefaultStatus: http.StatusCreated,
-		Responses: map[string]*huma.Response{
-			"204": {
-				Description: "ISpaceUC deleted",
-				Content:     map[string]*huma.MediaType{},
-			},
-			"404": {
-				Description: "ISpaceUC not found",
-				Content: map[string]*huma.MediaType{
-					"application/json": {
-						Schema: &huma.Schema{
-							Type: "object",
-							Properties: map[string]*huma.Schema{
-								"error": {Type: "string"},
-							},
-						},
-					},
-				},
-			},
-			"500": {
-				Description: "Internal server error",
-				Content: map[string]*huma.MediaType{
-					"application/json": {
-						Schema: &huma.Schema{
-							Type: "object",
-							Properties: map[string]*huma.Schema{
-								"error": {Type: "string"},
-							},
-						},
-					},
-				},
-			},
-		},
-	}, spaceHandler.DeleteSpace)
-
-	huma.Register(api, huma.Operation{
-		OperationID: "UpdateSpace",
-		Method:      http.MethodPut,
-		Path:        "/spaces/{id}",
-		Summary:     "update space",
-		Description: "Update an existing space name or description by ID",
-		Tags:        []string{"Spaces"},
-		Responses: map[string]*huma.Response{
-			"200": {
-				Description: "IUserUC updated",
-				Content: map[string]*huma.MediaType{
-					"application/json": {
-						Schema: spaceSchema,
-					},
-				},
-			},
-			"400": {
-				Description: "Invalid request",
-				Content: map[string]*huma.MediaType{
-					"application/json": {
-						Schema: &huma.Schema{
-							Type: "object",
-							Properties: map[string]*huma.Schema{
-								"message": {Type: "string"},
-								"field":   {Type: "string"},
-							},
-						},
-					},
-				},
-			},
-			"404": {
-				Description: "IUserUC not found",
-				Content: map[string]*huma.MediaType{
-					"application/json": {
-						Schema: &huma.Schema{
-							Type: "object",
-							Properties: map[string]*huma.Schema{
-								"error": {Type: "string"},
-							},
-						},
-					},
-				},
-			},
-			"500": {
-				Description: "Internal server error",
-				Content: map[string]*huma.MediaType{
-					"application/json": {
-						Schema: &huma.Schema{
-							Type: "object",
-							Properties: map[string]*huma.Schema{
-								"error": {Type: "string"},
-							},
-						},
-					},
-				},
-			},
-		},
-	}, spaceHandler.UpdateSpace)
-
-	huma.Register(api, huma.Operation{
-		OperationID:   "JoinSpace",
-		Method:        http.MethodPost,
-		Path:          "/spaces/join",
-		Summary:       "join space",
-		Description:   "join space",
-		Tags:          []string{"Spaces"},
+		OperationID:   "JoinEvent",
+		Method:        http.MethodPut,
+		Path:          "/events/{id}",
+		Summary:       "join event",
+		Description:   "join event",
+		Tags:          []string{"Events"},
 		DefaultStatus: http.StatusCreated,
 		Responses: map[string]*huma.Response{
 			"201": {
-				Description: "joined ISpaceUC",
+				Description: "joined IEventUC",
 				Content:     map[string]*huma.MediaType{},
-				Headers: map[string]*huma.Param{
-					"Location": {
-						Description: "URL of the space that user joined",
-						Schema:      &huma.Schema{Type: "string"},
-						Required:    true,
-					},
-				},
 			},
 			"400": {
 				Description: "Invalid request",
@@ -284,5 +176,48 @@ func setupSpaceRoutes(api huma.API, pg *database.Postgres) {
 				},
 			},
 		},
-	}, spaceHandler.JoinSpace)
+	}, eventHandler.JoinEvent)
+
+	huma.Register(api, huma.Operation{
+		OperationID:   "DeleteEvent",
+		Method:        http.MethodDelete,
+		Path:          "/events/{id}",
+		Summary:       "delete event",
+		Description:   "delete event",
+		Tags:          []string{"Events"},
+		DefaultStatus: http.StatusCreated,
+		Responses: map[string]*huma.Response{
+			"201": {
+				Description: "deleted IEventUC",
+				Content:     map[string]*huma.MediaType{},
+			},
+			"400": {
+				Description: "Invalid request",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{
+							Type: "object",
+							Properties: map[string]*huma.Schema{
+								"message": {Type: "string"},
+								"field":   {Type: "string"},
+							},
+						},
+					},
+				},
+			},
+			"500": {
+				Description: "Internal server error",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{
+							Type: "object",
+							Properties: map[string]*huma.Schema{
+								"error": {Type: "string"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, eventHandler.DeleteEvent)
 }

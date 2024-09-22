@@ -24,4 +24,5 @@ func SetupRoutes(router *fiber.App, pg *database.Postgres) {
 
 	setupUserRoutes(api, pg)
 	setupSpaceRoutes(api, pg)
+	setupEventRoutes(api, pg)
 }
