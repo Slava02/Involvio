@@ -3,8 +3,8 @@ package route
 import (
 	"github.com/Slava02/Involvio/internal/entity"
 	"github.com/Slava02/Involvio/internal/handler/rest/v1/user"
+	"github.com/Slava02/Involvio/internal/repository"
 	"github.com/Slava02/Involvio/internal/usecase"
-	"github.com/Slava02/Involvio/internal/usecase/repository"
 	"github.com/Slava02/Involvio/pkg/database"
 	"github.com/danielgtaylor/huma/v2"
 	"net/http"

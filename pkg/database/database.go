@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"github.com/Masterminds/squirrel"
 	"github.com/Slava02/Involvio/config"
 	"log/slog"
 	"time"
@@ -33,7 +34,8 @@ type (
 		connTimeout  time.Duration
 		isolation    pgx.TxIsoLevel
 
-		Pool *pgxpool.Pool
+		Builder squirrel.StatementBuilderType
+		Pool    *pgxpool.Pool
 	}
 )
 
@@ -52,6 +54,8 @@ func New(cfg *config.Config, opts ...Option) (*Postgres, error) {
 	for _, opt := range opts {
 		opt(pg)
 	}
+
+	pg.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
 	poolConfig, err := pgxpool.ParseConfig(databaseURL)
 	if err != nil {
