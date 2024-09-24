@@ -42,7 +42,6 @@ func (eh *EventHandler) CreateEvent(ctx context.Context, req *CreateEventRequest
 	log := slog.With(
 		slog.String("op", op),
 	)
-
 	log.Debug(op)
 
 	b := req.Body
@@ -82,7 +81,6 @@ func (eh *EventHandler) GetEvent(ctx context.Context, req *EventByIdRequest) (*E
 		slog.String("op", op),
 		slog.Int("event id", req.ID),
 	)
-
 	log.Debug(op)
 
 	cmd := commands.EventByIdCommand{
@@ -118,7 +116,6 @@ func (eh *EventHandler) JoinEvent(ctx context.Context, req *JoinEventRequest) (*
 		slog.Int("event id", req.EventId),
 		slog.Int("user id", req.Body.UserId),
 	)
-
 	log.Debug(op)
 
 	cmd := commands.JoinEventCommand{
@@ -152,7 +149,6 @@ func (eh *EventHandler) DeleteEvent(ctx context.Context, req *EventByIdRequest) 
 		slog.String("op", op),
 		slog.Int("event id", req.ID),
 	)
-
 	log.Debug(op)
 
 	cmd := commands.EventByIdCommand{

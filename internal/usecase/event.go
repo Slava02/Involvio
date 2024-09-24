@@ -36,7 +36,6 @@ func (ec *EventUseCase) CreateEvent(ctx context.Context, cmd commands.CreateEven
 	log := slog.With(
 		slog.String("op", op),
 	)
-
 	log.Debug(op)
 
 	// TODO: вынести генерацию id в зависимость
@@ -76,7 +75,6 @@ func (ec *EventUseCase) GetEvent(ctx context.Context, cmd commands.EventByIdComm
 		slog.String("op", op),
 		slog.Int("event id", cmd.ID),
 	)
-
 	log.Debug(op)
 
 	event, err := ec.eventRepo.GetEvent(ctx, cmd.ID)
@@ -104,7 +102,6 @@ func (ec *EventUseCase) JoinEvent(ctx context.Context, cmd commands.JoinEventCom
 		slog.Int("event id", cmd.EventId),
 		slog.Int("user id", cmd.UserId),
 	)
-
 	log.Debug(op)
 
 	_, err := ec.GetEvent(ctx, commands.EventByIdCommand{ID: cmd.EventId})
@@ -133,7 +130,6 @@ func (ec *EventUseCase) DeleteEvent(ctx context.Context, cmd commands.EventByIdC
 		slog.String("op", op),
 		slog.Int("event id", cmd.ID),
 	)
-
 	log.Debug(op)
 
 	_, err := ec.GetEvent(ctx, commands.EventByIdCommand{ID: cmd.ID})

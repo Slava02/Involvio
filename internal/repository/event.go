@@ -34,7 +34,6 @@ func (r *EventRepository) InsertEvent(ctx context.Context, userId int, event *en
 	log := slog.With(
 		slog.String("op", op),
 	)
-
 	log.Debug(op)
 
 	fail := func(err error) error {
@@ -94,7 +93,6 @@ func (r *EventRepository) GetEvent(ctx context.Context, id int) (*entity.Event, 
 		slog.String("op", op),
 		slog.Int("event id", id),
 	)
-
 	log.Debug(op)
 
 	fail := func(err error) (*entity.Event, error) {
@@ -168,7 +166,6 @@ func (r *EventRepository) DeleteEvent(ctx context.Context, id int) error {
 		slog.String("op", op),
 		slog.Int("event id", id),
 	)
-
 	log.Debug(op)
 
 	fail := func(err error) error {
