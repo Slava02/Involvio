@@ -162,6 +162,19 @@ func setupEventRoutes(api huma.API, pg *database.Postgres) {
 					},
 				},
 			},
+			"404": {
+				Description: "IEventUC not found",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{
+							Type: "object",
+							Properties: map[string]*huma.Schema{
+								"error": {Type: "string"},
+							},
+						},
+					},
+				},
+			},
 			"500": {
 				Description: "Internal server error",
 				Content: map[string]*huma.MediaType{
@@ -200,6 +213,19 @@ func setupEventRoutes(api huma.API, pg *database.Postgres) {
 							Properties: map[string]*huma.Schema{
 								"message": {Type: "string"},
 								"field":   {Type: "string"},
+							},
+						},
+					},
+				},
+			},
+			"404": {
+				Description: "IEventUC not found",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{
+							Type: "object",
+							Properties: map[string]*huma.Schema{
+								"error": {Type: "string"},
 							},
 						},
 					},

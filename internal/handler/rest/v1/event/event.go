@@ -2,12 +2,15 @@ package event
 
 import (
 	"context"
+	"errors"
 	"github.com/Slava02/Involvio/internal/entity"
+	"github.com/Slava02/Involvio/internal/repository"
 	"github.com/Slava02/Involvio/internal/usecase"
 	"github.com/Slava02/Involvio/internal/usecase/commands"
 	"github.com/danielgtaylor/huma/v2"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+	"log/slog"
 )
 
 type IEventUseCase interface {
@@ -30,9 +33,17 @@ func NewEventHandler(uc IEventUseCase) *EventHandler {
 }
 
 func (eh *EventHandler) CreateEvent(ctx context.Context, req *CreateEventRequest) (*EventResponse, error) {
+	const op = "Handler:CreateEvent"
+
 	tracer := otel.Tracer(tracerName)
-	_, span := tracer.Start(ctx, "CreateEvent", trace.WithSpanKind(trace.SpanKindServer))
+	_, span := tracer.Start(ctx, op, trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
+
+	log := slog.With(
+		slog.String("op", op),
+	)
+
+	log.Debug(op)
 
 	b := req.Body
 	// TODO: добавить максимальное количество участников
@@ -48,7 +59,11 @@ func (eh *EventHandler) CreateEvent(ctx context.Context, req *CreateEventRequest
 
 	event, err := eh.eventUC.CreateEvent(ctx, cmd)
 	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
+		switch {
+		default:
+			log.Error("couldn't join event: ", err.Error())
+			return nil, huma.Error500InternalServerError(err.Error())
+		}
 	}
 
 	resp := ToEventOutputFromEntity(event)
@@ -57,9 +72,18 @@ func (eh *EventHandler) CreateEvent(ctx context.Context, req *CreateEventRequest
 }
 
 func (eh *EventHandler) GetEvent(ctx context.Context, req *EventByIdRequest) (*EventResponse, error) {
+	const op = "Handler:JoinEvent"
+
 	tracer := otel.Tracer(tracerName)
-	_, span := tracer.Start(ctx, "GetEvent", trace.WithSpanKind(trace.SpanKindServer))
+	_, span := tracer.Start(ctx, op, trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
+
+	log := slog.With(
+		slog.String("op", op),
+		slog.Int("event id", req.ID),
+	)
+
+	log.Debug(op)
 
 	cmd := commands.EventByIdCommand{
 		ID: req.ID,
@@ -67,7 +91,14 @@ func (eh *EventHandler) GetEvent(ctx context.Context, req *EventByIdRequest) (*E
 
 	event, err := eh.eventUC.GetEvent(ctx, cmd)
 	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
+		switch {
+		case errors.Is(err, repository.ErrEventNotFound):
+			log.Info("couldn't get event: ", err.Error())
+			return nil, huma.Error404NotFound(err.Error())
+		default:
+			log.Error("couldn't get event: ", err.Error())
+			return nil, huma.Error500InternalServerError(err.Error())
+		}
 	}
 
 	resp := ToEventOutputFromEntity(event)
@@ -76,9 +107,19 @@ func (eh *EventHandler) GetEvent(ctx context.Context, req *EventByIdRequest) (*E
 }
 
 func (eh *EventHandler) JoinEvent(ctx context.Context, req *JoinEventRequest) (*struct{}, error) {
+	const op = "Handler:JoinEvent"
+
 	tracer := otel.Tracer(tracerName)
-	_, span := tracer.Start(ctx, "JoinEvent", trace.WithSpanKind(trace.SpanKindServer))
+	_, span := tracer.Start(ctx, op, trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
+
+	log := slog.With(
+		slog.String("op", op),
+		slog.Int("event id", req.EventId),
+		slog.Int("user id", req.Body.UserId),
+	)
+
+	log.Debug(op)
 
 	cmd := commands.JoinEventCommand{
 		EventId: req.EventId,
@@ -87,16 +128,32 @@ func (eh *EventHandler) JoinEvent(ctx context.Context, req *JoinEventRequest) (*
 
 	err := eh.eventUC.JoinEvent(ctx, cmd)
 	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
+		switch {
+		case errors.Is(err, repository.ErrEventNotFound):
+			log.Info("couldn't join event: ", err.Error())
+			return nil, huma.Error404NotFound(err.Error())
+		default:
+			log.Error("couldn't join event: ", err.Error())
+			return nil, huma.Error500InternalServerError(err.Error())
+		}
 	}
 
 	return &struct{}{}, nil
 }
 
 func (eh *EventHandler) DeleteEvent(ctx context.Context, req *EventByIdRequest) (*struct{}, error) {
+	const op = "Handler:DeleteEvent"
+
 	tracer := otel.Tracer(tracerName)
-	_, span := tracer.Start(ctx, "DeleteEvent", trace.WithSpanKind(trace.SpanKindServer))
+	_, span := tracer.Start(ctx, op, trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
+
+	log := slog.With(
+		slog.String("op", op),
+		slog.Int("event id", req.ID),
+	)
+
+	log.Debug(op)
 
 	cmd := commands.EventByIdCommand{
 		ID: req.ID,
@@ -104,7 +161,14 @@ func (eh *EventHandler) DeleteEvent(ctx context.Context, req *EventByIdRequest) 
 
 	err := eh.eventUC.DeleteEvent(ctx, cmd)
 	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
+		switch {
+		case errors.Is(err, repository.ErrEventNotFound):
+			log.Info("couldn't delete event: ", err.Error())
+			return nil, huma.Error404NotFound(err.Error())
+		default:
+			log.Error("couldn't delete event: ", err.Error())
+			return nil, huma.Error500InternalServerError(err.Error())
+		}
 	}
 
 	return &struct{}{}, nil

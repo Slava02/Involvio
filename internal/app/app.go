@@ -26,7 +26,7 @@ type App struct {
 
 func NewApp() *App {
 	return &App{
-		fiber.New(),
+		Server: fiber.New(),
 	}
 }
 
