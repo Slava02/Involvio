@@ -35,13 +35,13 @@ drop-db:
 
 .PHONY: docker
 docker:
-	docker build -t template .
+	docker build -t involvio .
 	docker run --rm \
-		--name template \
+		--name involvio \
 		--network host \
 		-p 9000:9000 \
 		-e DB_PASSWORD=$(DB_PASSWORD) \
-		template
+		involvio
 
 # ----------------------------------- TESTING -----------------------------------
 .PHONY: tests

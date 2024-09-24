@@ -12,6 +12,8 @@
   "db": {
     "host": "postgres",
     "port": 5432,
+    "host_local": "localhost",
+    "port_local": 5433,
     "user": "postgres",
     "name": "involvio",
     "pool_max": 2

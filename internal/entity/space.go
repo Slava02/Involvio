@@ -16,15 +16,15 @@ type Space struct {
 
 type Tags []map[string]interface{}
 
-func (a Tags) Value() (driver.Value, error) {
+func (a *Tags) Value() (driver.Value, error) {
 	return json.Marshal(a)
 }
 
 func (a *Tags) Scan(value interface{}) error {
-	b, ok := value.([]byte)
+	b, ok := value.(string)
 	if !ok {
 		return errors.New("type assertion to []byte failed")
 	}
 
-	return json.Unmarshal(b, &a)
+	return json.Unmarshal([]byte(b), &a)
 }

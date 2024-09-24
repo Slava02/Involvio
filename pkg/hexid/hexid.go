@@ -9,6 +9,11 @@ var (
 	pattern = `^[0-9]{12}$`
 )
 
+type Generator interface {
+	Generate() (int, error)
+	Validate(id int) bool
+}
+
 // TODO: make UUID generator
 func Generate() (int, error) {
 	return rand.IntN(10000), nil
