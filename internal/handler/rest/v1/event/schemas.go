@@ -28,11 +28,11 @@ type (
 	}
 
 	EventByIdRequest struct {
-		ID int `path:"id" maxLength:"30" example:"1" doc:"event id"`
+		ID int `path:"id" json:"id" maxLength:"30" example:"1" doc:"event id"`
 	}
 
 	JoinEventRequest struct {
-		EventId int `json:"eventId" example:"123" doc:"Event ID"`
+		EventId int `path:"id" json:"eventId" example:"123" doc:"Event ID"`
 		Body    struct {
 			UserId int `json:"userId" example:"123" doc:"User ID"`
 		}

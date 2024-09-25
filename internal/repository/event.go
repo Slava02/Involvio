@@ -125,6 +125,7 @@ func (r *EventRepository) GetEvent(ctx context.Context, id int) (*entity.Event, 
 	return event, nil
 }
 
+// TODO: Err already joined
 func (r *EventRepository) AddUser(ctx context.Context, eventId, userId int) error {
 	const op = "Repo:AddUserToEvent"
 
@@ -160,7 +161,7 @@ func (r *EventRepository) AddUser(ctx context.Context, eventId, userId int) erro
 }
 
 func (r *EventRepository) DeleteEvent(ctx context.Context, id int) error {
-	const op = "Repo:Delete event"
+	const op = "Repo:DeleteEvent"
 
 	log := slog.With(
 		slog.String("op", op),

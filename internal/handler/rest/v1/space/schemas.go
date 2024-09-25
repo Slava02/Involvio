@@ -19,6 +19,7 @@ type (
 
 	CreateSpaceRequest struct {
 		Body struct {
+			UserId      int         `json:"userId" example:"123" doc:"User ID"`
 			Name        string      `json:"name" example:"MAI" doc:"Space Name"`
 			Description string      `json:"description" example:"university" doc:"Space description"`
 			Tags        entity.Tags `json:"tags" doc:"Tags options for this space"`

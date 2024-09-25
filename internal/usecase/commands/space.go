@@ -10,6 +10,13 @@ type (
 		Tags        entity.Tags
 	}
 
+	CreateSpaceCommand struct {
+		UserID      int
+		Name        string
+		Description string
+		Tags        entity.Tags
+	}
+
 	SpaceByIdCommand struct {
 		ID int
 	}
