@@ -7,12 +7,15 @@ import (
 	"fmt"
 	"github.com/Slava02/Involvio/internal/entity"
 	"github.com/Slava02/Involvio/pkg/database"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	"log/slog"
 	"sync"
 )
 
 var (
-	ErrEventNotFound = errors.New("event not found")
+	ErrEventNotFound      = errors.New("event not found")
+	ErrEventAlreadyExists = errors.New("event already exists")
 )
 
 func NewEventRepository(once *sync.Once, db *database.Postgres) *EventRepository {
@@ -153,8 +156,20 @@ func (r *EventRepository) AddUser(ctx context.Context, eventId, userId int) erro
 
 	_, err = r.db.Pool.Exec(ctx, query, args...)
 	if err != nil {
-		log.Debug("couldn't insert data in user_event: ", err.Error())
-		return fail(err)
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			switch pgErr.Code {
+			case pgerrcode.UniqueViolation:
+				log.Debug("couldn't insert data in user_event: ", err.Error())
+				return fail(ErrEventAlreadyExists)
+			default:
+				log.Debug("couldn't insert data in user_event: ", err.Error())
+				return fail(err)
+			}
+		} else {
+			log.Debug("couldn't insert data in user_event: ", err.Error())
+			return fail(err)
+		}
 	}
 
 	return nil

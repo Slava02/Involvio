@@ -126,12 +126,15 @@ func (eh *EventHandler) JoinEvent(ctx context.Context, req *JoinEventRequest) (*
 	err := eh.eventUC.JoinEvent(ctx, cmd)
 	if err != nil {
 		switch {
+		case errors.Is(err, repository.ErrEventAlreadyExists):
+			log.Info("couldn't join event: ", err.Error())
+			return nil, huma.Error400BadRequest("user in event already exists")
 		case errors.Is(err, repository.ErrEventNotFound):
 			log.Info("couldn't join event: ", err.Error())
-			return nil, huma.Error404NotFound(err.Error())
+			return nil, huma.Error404NotFound("space not found")
 		default:
 			log.Error("couldn't join event: ", err.Error())
-			return nil, huma.Error500InternalServerError(err.Error())
+			return nil, huma.Error500InternalServerError("internal service error")
 		}
 	}
 

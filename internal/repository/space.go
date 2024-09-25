@@ -7,12 +7,15 @@ import (
 	"fmt"
 	"github.com/Slava02/Involvio/internal/entity"
 	"github.com/Slava02/Involvio/pkg/database"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	"log/slog"
 	"sync"
 )
 
 var (
-	ErrSpaceNotFound = errors.New("space not found")
+	ErrSpaceNotFound      = errors.New("space not found")
+	ErrSpaceAlreadyExists = errors.New("space already exists")
 )
 
 func NewSpaceRepository(once *sync.Once, db *database.Postgres) *SpaceRepository {
@@ -242,8 +245,20 @@ func (r *SpaceRepository) AddUser(ctx context.Context, userId, spaceId int) erro
 
 	_, err = r.db.Pool.Exec(ctx, query, args...)
 	if err != nil {
-		log.Debug("couldn't insert data in user_space: ", err.Error())
-		return fail(err)
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			switch pgErr.Code {
+			case pgerrcode.UniqueViolation:
+				log.Debug("couldn't insert data in user_space: ", err.Error())
+				return fail(ErrSpaceAlreadyExists)
+			default:
+				log.Debug("couldn't insert data in user_space: ", err.Error())
+				return fail(err)
+			}
+		} else {
+			log.Debug("couldn't insert data in user_space: ", err.Error())
+			return fail(err)
+		}
 	}
 
 	return nil

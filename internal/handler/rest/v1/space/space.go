@@ -122,12 +122,15 @@ func (sh *SpaceHandler) JoinSpace(ctx context.Context, req *JoinSpaceRequest) (*
 	err := sh.spaceUC.JoinSpace(ctx, cmd)
 	if err != nil {
 		switch {
+		case errors.Is(err, repository.ErrSpaceAlreadyExists):
+			log.Info("couldn't join space: ", err.Error())
+			return nil, huma.Error400BadRequest("user in space already exists")
 		case errors.Is(err, repository.ErrEventNotFound):
-			log.Info("couldn't get space: ", err.Error())
-			return nil, huma.Error404NotFound(err.Error())
+			log.Info("couldn't join space: ", err.Error())
+			return nil, huma.Error404NotFound("space not found")
 		default:
-			log.Error("couldn't get space: ", err.Error())
-			return nil, huma.Error500InternalServerError(err.Error())
+			log.Error("couldn't join space: ", err.Error())
+			return nil, huma.Error500InternalServerError("internal service error")
 		}
 	}
 

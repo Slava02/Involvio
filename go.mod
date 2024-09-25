@@ -3,11 +3,13 @@ module github.com/Slava02/Involvio
 go 1.22.5
 
 require (
+	github.com/Masterminds/squirrel v1.5.4
 	github.com/danielgtaylor/huma/v2 v2.22.1
 	github.com/gofiber/contrib/otelfiber/v2 v2.1.1
 	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/golang-migrate/migrate/v4 v4.18.1
 	github.com/ilyakaznacheev/cleanenv v1.5.0
+	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.9.0
@@ -17,7 +19,6 @@ require (
 
 require (
 	github.com/BurntSushi/toml v1.4.0 // indirect
-	github.com/Masterminds/squirrel v1.5.4 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
