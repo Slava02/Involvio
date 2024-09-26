@@ -113,6 +113,7 @@ export DB_PASSWORD=admin ENV_NAME=dev && make dc
 - [ ] Добавить unit тесты
 - [ ] Добавить integration тесты
 - [ ] Добавить prometheus и grafana в docker-compose
+- [ ] Нарисовать макеты и описать повторно юзкейзы 
 
 ## Команда проекта
 
