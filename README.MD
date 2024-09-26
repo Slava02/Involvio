@@ -16,11 +16,11 @@
 ## Технологии
 
 1. GO 1.22.5
-⋅⋅* [Huma](https://huma.rocks/)
-⋅⋅* [Fiber](https://github.com/gofiber/fiber)
+- [Huma](https://huma.rocks/)
+- [Fiber](https://github.com/gofiber/fiber)
 2. Postgres 14
-⋅⋅* [pgx/v5](https://github.com/jackc/pgx)
-⋅⋅* [squirrel](https://github.com/Masterminds/squirrel)
+- [pgx/v5](https://github.com/jackc/pgx)
+- [squirrel](https://github.com/Masterminds/squirrel)
 3. Docker
 
 ### Архитектура
