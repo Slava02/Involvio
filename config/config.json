@@ -10,8 +10,8 @@
     "url": "jaeger:4317"
   },
   "db": {
-    "host": "localhost",
-    "port": 5433,
+    "host": "postgres",
+    "port": 5432,
     "host_local": "localhost",
     "port_local": 5433,
     "user": "postgres",

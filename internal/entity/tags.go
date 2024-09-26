@@ -13,6 +13,10 @@ func (a *Tags) Value() (driver.Value, error) {
 }
 
 func (a *Tags) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+
 	b, ok := value.(string)
 	if !ok {
 		return errors.New("type assertion to []byte failed")

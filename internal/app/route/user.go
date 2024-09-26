@@ -242,13 +242,12 @@ func setupUserRoutes(api huma.API, pg *database.Postgres) {
 	}, userHandler.DeleteUser)
 
 	huma.Register(api, huma.Operation{
-		OperationID:   "GetUserForm",
-		Method:        http.MethodGet,
-		Path:          "/users/{userId}/{spaceId}",
-		Summary:       "get user form in space",
-		Description:   "returns user form in provided space",
-		Tags:          []string{"Users"},
-		DefaultStatus: http.StatusNoContent,
+		OperationID: "GetUserForm",
+		Method:      http.MethodGet,
+		Path:        "/users/{userId}/{spaceId}",
+		Summary:     "get user form in space",
+		Description: "returns user form in provided space",
+		Tags:        []string{"Users"},
 		Responses: map[string]*huma.Response{
 			"200": {
 				Description: "IUserUC response",
@@ -302,19 +301,18 @@ func setupUserRoutes(api huma.API, pg *database.Postgres) {
 	}, userHandler.GetForm)
 
 	huma.Register(api, huma.Operation{
-		OperationID:   "UpdateUserForm",
-		Method:        http.MethodPut,
-		Path:          "/users/{userId}/{spaceId}",
-		Summary:       "update user form in space",
-		Description:   "returns updated user form in provided space",
-		Tags:          []string{"Users"},
-		DefaultStatus: http.StatusNoContent,
+		OperationID: "UpdateUserForm",
+		Method:      http.MethodPut,
+		Path:        "/users/{userId}/{spaceId}",
+		Summary:     "update user form in space",
+		Description: "returns updated user form in provided space",
+		Tags:        []string{"Users"},
 		Responses: map[string]*huma.Response{
 			"200": {
 				Description: "IUserUC response",
 				Content: map[string]*huma.MediaType{
 					"application/json": {
-						Schema: formSchema,
+						Schema: userWithFormsSchema,
 					},
 				},
 			},

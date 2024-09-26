@@ -41,20 +41,20 @@ type (
 
 	CreateUserRequest struct {
 		Body struct {
-			FirstName string
-			LastName  string
-			UserName  string
-			PhotoURL  string
+			FirstName string `json:"first_name" example:"ivan" doc:"User first name"`
+			LastName  string `json:"last_name" example:"ivanov" doc:"User last nam"`
+			Username  string `json:"username" example:"ivanko228" doc:"Username"`
+			PhotoURL  string `json:"photo_url" example:"https://telegram/photo_ivan.png" doc:"User photo url"`
 		}
 	}
 
 	UpdateUserRequest struct {
 		ID   int `path:"id" maxLength:"30" example:"1" doc:"user id"`
 		Body struct {
-			FirstName string
-			LastName  string
-			UserName  string
-			PhotoURL  string
+			FirstName string `json:"first_name" example:"ivan" doc:"User first name"`
+			LastName  string `json:"last_name" example:"ivanov" doc:"User last nam"`
+			Username  string `json:"username" example:"ivanko228" doc:"Username"`
+			PhotoURL  string `json:"photo_url" example:"https://telegram/photo_ivan.png" doc:"User photo url"`
 		}
 	}
 
@@ -67,8 +67,6 @@ type (
 		UserID  int `path:"userId" maxLength:"30" example:"1" doc:"user id"`
 		SpaceID int `path:"spaceId" maxLength:"30" example:"1" doc:"space id"`
 		Body    struct {
-			Admin    bool
-			Creator  bool
 			UserTags entity.Tags
 			PairTags entity.Tags
 		}

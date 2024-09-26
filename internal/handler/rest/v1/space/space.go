@@ -125,7 +125,7 @@ func (sh *SpaceHandler) JoinSpace(ctx context.Context, req *JoinSpaceRequest) (*
 		case errors.Is(err, repository.ErrSpaceAlreadyExists):
 			log.Info("couldn't join space: ", err.Error())
 			return nil, huma.Error400BadRequest("user in space already exists")
-		case errors.Is(err, repository.ErrEventNotFound):
+		case errors.Is(err, repository.ErrSpaceNotFound):
 			log.Info("couldn't join space: ", err.Error())
 			return nil, huma.Error404NotFound("space not found")
 		default:

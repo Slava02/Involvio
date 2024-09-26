@@ -2,11 +2,14 @@ package user
 
 import (
 	"context"
+	"errors"
 	"github.com/Slava02/Involvio/internal/entity"
+	"github.com/Slava02/Involvio/internal/repository"
 	"github.com/Slava02/Involvio/internal/usecase"
 	"github.com/Slava02/Involvio/internal/usecase/commands"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+	"log/slog"
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -18,7 +21,7 @@ type IUserUseCase interface {
 	UpdateUser(ctx context.Context, cmd commands.UpdateUserCommand) (*entity.User, error)
 	DeleteUser(ctx context.Context, cmd commands.FormByIdCommand) error
 	GetForm(ctx context.Context, cmd commands.FormByIdCommand) (*entity.Form, error)
-	UpdateForm(ctx context.Context, cmd commands.UpdateFormCommand) (*entity.Form, error)
+	UpdateForm(ctx context.Context, cmd commands.UpdateFormCommand) (*entity.User, []*entity.Form, error)
 }
 
 var _ IUserUseCase = (*usecase.UserUseCase)(nil)
@@ -34,17 +37,30 @@ func NewUserHandler(uc IUserUseCase) *UserHandler {
 }
 
 func (uh *UserHandler) GetUserWithForms(ctx context.Context, req *UserByIdRequest) (*UserWithFormsResponse, error) {
+	const op = "Handler:GetUserWithForms"
+
 	tracer := otel.Tracer(tracerName)
-	_, span := tracer.Start(ctx, "FindUserByID", trace.WithSpanKind(trace.SpanKindServer))
+	_, span := tracer.Start(ctx, op, trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
+
+	log := slog.With(
+		slog.String("op", op),
+		slog.Int("user id", req.ID),
+	)
+	log.Debug(op)
 
 	cmd := commands.UserByIdCommand{ID: req.ID}
 
 	user, forms, err := uh.userUC.GetUser(ctx, cmd)
-	if user == nil && err == nil {
-		return nil, huma.Error404NotFound("user not found")
-	} else if err != nil {
-		return nil, huma.Error500InternalServerError("getting user by id error. ", err)
+	if err != nil {
+		switch {
+		case errors.Is(err, repository.ErrUserNotFound):
+			log.Info("couldn't get user: ", err.Error())
+			return nil, huma.Error404NotFound(err.Error())
+		default:
+			log.Error("couldn't get user: ", err.Error())
+			return nil, huma.Error500InternalServerError(err.Error())
+		}
 	}
 
 	resp := ToUserWithFormsOutputFromEntity(user, forms)
@@ -53,21 +69,38 @@ func (uh *UserHandler) GetUserWithForms(ctx context.Context, req *UserByIdReques
 }
 
 func (uh *UserHandler) CreateUser(ctx context.Context, req *CreateUserRequest) (*UserResponse, error) {
+	const op = "Handler:CreateUser"
+
 	tracer := otel.Tracer(tracerName)
-	_, span := tracer.Start(ctx, "CreateUser", trace.WithSpanKind(trace.SpanKindServer))
+	_, span := tracer.Start(ctx, op, trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
+
+	log := slog.With(
+		slog.String("op", op),
+	)
+	log.Debug(op)
 
 	cmd := commands.CreateUserCommand{
 		FirstName: req.Body.FirstName,
 		LastName:  req.Body.LastName,
-		UserName:  req.Body.UserName,
-		PhotoURL:  req.Body.UserName,
+		UserName:  req.Body.Username,
+		PhotoURL:  req.Body.PhotoURL,
 		AuthDate:  time.Now(),
 	}
 
 	user, err := uh.userUC.CreateUser(ctx, cmd)
 	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
+		switch {
+		case errors.Is(err, repository.ErrUserAlreadyExists):
+			log.Info("couldn't create user: ", err.Error())
+			return nil, huma.Error400BadRequest("user in space already exists")
+		case errors.Is(err, repository.ErrUserNotFound):
+			log.Info("couldn't create user: ", err.Error())
+			return nil, huma.Error404NotFound("space not found")
+		default:
+			log.Error("couldn't create user: ", err.Error())
+			return nil, huma.Error500InternalServerError("internal service error")
+		}
 	}
 
 	resp := ToUserOutputFromEntity(user)
@@ -76,22 +109,36 @@ func (uh *UserHandler) CreateUser(ctx context.Context, req *CreateUserRequest) (
 }
 
 func (uh *UserHandler) UpdateUser(ctx context.Context, req *UpdateUserRequest) (*UserResponse, error) {
+	const op = "Handler:UpdateUser"
+
 	tracer := otel.Tracer(tracerName)
-	_, span := tracer.Start(ctx, "UpdateUser", trace.WithSpanKind(trace.SpanKindServer))
+	_, span := tracer.Start(ctx, op, trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
+
+	log := slog.With(
+		slog.String("op", op),
+	)
+	log.Debug(op)
 
 	cmd := commands.UpdateUserCommand{
 		ID:        req.ID,
 		FirstName: req.Body.FirstName,
 		LastName:  req.Body.LastName,
-		UserName:  req.Body.UserName,
-		PhotoURL:  req.Body.UserName,
+		UserName:  req.Body.Username,
+		PhotoURL:  req.Body.Username,
 	}
 
 	user, err := uh.userUC.UpdateUser(ctx, cmd)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("update user error. ", err)
+		switch {
+		case errors.Is(err, repository.ErrUserNotFound):
+			log.Info("couldn't update user: ", err.Error())
+			return nil, huma.Error404NotFound(err.Error())
+		default:
+			log.Error("couldn't update user: ", err.Error())
+			return nil, huma.Error500InternalServerError(err.Error())
+		}
 	}
 
 	resp := ToUserOutputFromEntity(user)
@@ -100,30 +147,58 @@ func (uh *UserHandler) UpdateUser(ctx context.Context, req *UpdateUserRequest) (
 }
 
 func (uh *UserHandler) DeleteUser(ctx context.Context, req *DeleteUserRequest) (*struct{}, error) {
+	const op = "Handler:DeleteUser"
+
 	tracer := otel.Tracer(tracerName)
-	_, span := tracer.Start(ctx, "DeleteUser", trace.WithSpanKind(trace.SpanKindServer))
+	_, span := tracer.Start(ctx, op, trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
+
+	log := slog.With(
+		slog.String("op", op),
+	)
+	log.Debug(op)
 
 	cmd := commands.FormByIdCommand{UserID: req.UserId, SpaceID: req.SpaceId}
 
 	err := uh.userUC.DeleteUser(ctx, cmd)
 	if err != nil {
-		return nil, huma.Error400BadRequest("user not found", err)
+		switch {
+		case errors.Is(err, repository.ErrUserNotFound):
+			log.Info("couldn't delete user: ", err.Error())
+			return nil, huma.Error404NotFound(err.Error())
+		default:
+			log.Error("couldn't delete user: ", err.Error())
+			return nil, huma.Error500InternalServerError(err.Error())
+		}
 	}
 
 	return &struct{}{}, nil
 }
 
 func (uh *UserHandler) GetForm(ctx context.Context, req *FormByIdRequest) (*FormResponse, error) {
+	const op = "Handler:DeleteUser"
+
 	tracer := otel.Tracer(tracerName)
-	_, span := tracer.Start(ctx, "FindUserFormByID", trace.WithSpanKind(trace.SpanKindServer))
+	_, span := tracer.Start(ctx, op, trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
+
+	log := slog.With(
+		slog.String("op", op),
+	)
+	log.Debug(op)
 
 	cmd := commands.FormByIdCommand{UserID: req.UserID, SpaceID: req.SpaceID}
 
 	form, err := uh.userUC.GetForm(ctx, cmd)
 	if err != nil {
-		return nil, huma.Error500InternalServerError("getting user by id error. ", err)
+		switch {
+		case errors.Is(err, repository.ErrUserNotFound):
+			log.Info("couldn't get form: ", err.Error())
+			return nil, huma.Error404NotFound(err.Error())
+		default:
+			log.Error("couldn't get form: ", err.Error())
+			return nil, huma.Error500InternalServerError(err.Error())
+		}
 	}
 
 	resp := ToFormOutputFromEntity(form)
@@ -131,27 +206,38 @@ func (uh *UserHandler) GetForm(ctx context.Context, req *FormByIdRequest) (*Form
 	return resp, nil
 }
 
-func (uh *UserHandler) UpdateForm(ctx context.Context, req *UpdateFormRequest) (*FormResponse, error) {
+func (uh *UserHandler) UpdateForm(ctx context.Context, req *UpdateFormRequest) (*UserWithFormsResponse, error) {
+	const op = "Handler:UpdateForm"
+
 	tracer := otel.Tracer(tracerName)
-	_, span := tracer.Start(ctx, "FindUserFormByID", trace.WithSpanKind(trace.SpanKindServer))
+	_, span := tracer.Start(ctx, op, trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	cmd := commands.UpdateFormCommand{Form: &entity.Form{
+	log := slog.With(
+		slog.String("op", op),
+	)
+	log.Debug(op)
+
+	cmd := commands.UpdateFormCommand{
 		UserID:   req.UserID,
 		SpaceID:  req.SpaceID,
-		Admin:    req.Body.Admin,
-		Creator:  req.Body.Creator,
 		UserTags: req.Body.UserTags,
 		PairTags: req.Body.PairTags,
-	}}
-
-	// TODO: в таких случаях надо будет по-человечески ошибки обрабатывать свитчом
-	form, err := uh.userUC.UpdateForm(ctx, cmd)
-	if err != nil {
-		return nil, huma.Error500InternalServerError("getting user by id error. ", err)
 	}
 
-	resp := ToFormOutputFromEntity(form)
+	user, forms, err := uh.userUC.UpdateForm(ctx, cmd)
+	if err != nil {
+		switch {
+		case errors.Is(err, repository.ErrUserNotFound):
+			log.Info("couldn't update user: ", err.Error())
+			return nil, huma.Error404NotFound(err.Error())
+		default:
+			log.Error("couldn't update user: ", err.Error())
+			return nil, huma.Error500InternalServerError(err.Error())
+		}
+	}
+
+	resp := ToUserWithFormsOutputFromEntity(user, forms)
 
 	return resp, nil
 }

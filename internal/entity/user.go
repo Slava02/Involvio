@@ -15,7 +15,7 @@ type User struct {
 }
 
 type Form struct {
-	UserID   int  `doc:"User ID" json:"user_id"       example:"1234"`
+	//UserID   int  `doc:"User ID" json:"user_id"       example:"1234"`
 	SpaceID  int  `doc:"Space Id" json:"space_id"       example:"1234"`
 	Admin    bool `doc:"If user is space admin" json:"admin" example:"true"`
 	Creator  bool `doc:"If user is space creator" json:"creator" example:"true"`

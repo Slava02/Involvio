@@ -17,7 +17,10 @@ type (
 	}
 
 	UpdateFormCommand struct {
-		*entity.Form
+		UserID   int
+		SpaceID  int
+		UserTags entity.Tags
+		PairTags entity.Tags
 	}
 
 	UpdateUserCommand struct {

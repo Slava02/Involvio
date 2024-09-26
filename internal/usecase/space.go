@@ -144,8 +144,6 @@ func (sc *SpaceUseCase) GetSpace(ctx context.Context, cmd commands.SpaceByIdComm
 	return space, nil
 }
 
-// TODO: already joined
-// TODO: fix
 func (sc *SpaceUseCase) JoinSpace(ctx context.Context, cmd commands.JoinSpaceCommand) error {
 	const op = "Usecase:JoinSpace"
 
