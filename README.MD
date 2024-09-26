@@ -46,19 +46,17 @@ erDiagram
     }
 
     USER_SPACE {
-        integer user_id FK
-        integer space_id FK
+        integer user_id PK
+        integer space_id PK
         jsonb user_tags
         jsonb pair_tags
         bool is_admin
         bool is_creator
-        PK(user_id, space_id)
     }
 
     USER_EVENT {
-        integer user_id FK
-        integer event_id FK
-        PK(user_id, event_id)
+        integer user_id PK
+        integer event_id PK
     }
 
     EVENT {
@@ -71,11 +69,14 @@ erDiagram
         jsonb tags
     }
 
-    SPACE ||--o{ USER_SPACE : contains
-    USER ||--o{ USER_SPACE : participates_in
-    SPACE ||--o{ EVENT : hosts
-    EVENT ||--o{ USER_EVENT : involves
-    USER ||--o{ USER_EVENT : attends
+    USER_SPACE ||--o{ USER : participates_in
+    USER_SPACE ||--o{ SPACE : contains
+
+    USER_EVENT ||--o{ USER : attends
+
+    USER_EVENT ||--o{ EVENT : involves
+
+    EVENT ||--o{ SPACE : hosts
 ```
 
 ## Начало работы
