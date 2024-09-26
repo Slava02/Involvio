@@ -1,18 +1,27 @@
 # Involvio
 
-Платформа для увелечения вовлеченности участников организации в ее жизнь
+Платформа для организации random coffee внутри своего сообщества
 
 ## Содержание
 - [Технологии](#технологии)
 - [Начало работы](#начало-работы)
 - [Тестирование](#тестирование)
-- [To do](#to-do)
+- [Документация](#Документация)
+- [Мониторинг](#Мониторинг-ресурсов)
+- [Профайлинг](#Профайлер)
+- [To do](#todo)
 - [Команда проекта](#команда-проекта)
+
 
 ## Технологии
 
-- GO
-- Postgresql
+1. GO 1.22.5
+⋅⋅* [Huma](https://huma.rocks/)
+⋅⋅* [Fiber](https://github.com/gofiber/fiber)
+2. Postgres 14
+⋅⋅* [pgx/v5](https://github.com/jackc/pgx)
+⋅⋅* [squirrel](https://github.com/Masterminds/squirrel)
+3. Docker
 
 ### Архитектура
 ![img.png](docs/img/img.png)
@@ -21,59 +30,52 @@
 ```mermaid
 erDiagram
     SPACE {
-        INTEGER id PK
-        VARCHAR name
-        VARCHAR description
-    }
-
-    CATEGORY {
-        INTEGER id PK
-        VARCHAR name
-    }
-
-    CATEGORY_SPACE {
-        INTEGER category_id PK
-        INTEGER space_id PK
+        integer id PK
+        varchar name
+        varchar description
+        jsonb tags
     }
 
     USER {
-        INTEGER id PK
-        VARCHAR login
+        integer id PK
+        varchar first_name
+        varchar last_name
+        varchar username
+        varchar photo_url
+        timestamp auth_date
     }
 
     USER_SPACE {
-        INTEGER user_id PK
-        INTEGER space_id PK
+        integer user_id FK
+        integer space_id FK
+        jsonb user_tags
+        jsonb pair_tags
+        bool is_admin
+        bool is_creator
+        PK(user_id, space_id)
     }
 
     USER_EVENT {
-        INTEGER user_id PK
-        INTEGER event_id PK
+        integer user_id FK
+        integer event_id FK
+        PK(user_id, event_id)
     }
 
     EVENT {
-        INTEGER id PK
-        VARCHAR name
-        VARCHAR description
-        TIMESTAMP begin_date
-        TIMESTAMP end_date
+        integer id PK
+        integer space_id FK
+        varchar name
+        varchar description
+        timestamp begin_date
+        timestamp end_date
+        jsonb tags
     }
 
-    CATEGORY_EVENT {
-        INTEGER event_id PK
-        INTEGER category_id PK
-        BOOLEAN parameter
-    }
-
-    USER_SPACE }|--|| USER : "user_id > id"
-    USER_SPACE }|--|| SPACE : "space_id > id"
-    USER_EVENT }|--|| USER : "user_id > id"
-    USER_EVENT }|--|| EVENT : "event_id > id"
-    CATEGORY_SPACE }|--|| SPACE : "space_id > id"
-    CATEGORY_SPACE }|--|| CATEGORY : "category_id > id"
-    CATEGORY_EVENT }|--|| EVENT : "event_id > id"
-    CATEGORY_EVENT }|--|| CATEGORY : "category_id > id"
-
+    SPACE ||--o{ USER_SPACE : contains
+    USER ||--o{ USER_SPACE : participates_in
+    SPACE ||--o{ EVENT : hosts
+    EVENT ||--o{ USER_EVENT : involves
+    USER ||--o{ USER_EVENT : attends
 ```
 
 ## Начало работы
@@ -84,12 +86,32 @@ erDiagram
 - [docker-compose](https://docs.docker.com/compose/install/)
 - [migrate cli](https://pkg.go.dev/github.com/golang-migrate/migrate/v4#readme-cli-usage)
 #### Переменные среды
-- PG_URL - ссылка для подключения к Postgres (по умолчанию - postgres://user:pass@localhost:5432/involvio)
+- DB_PASSWORD - пароль для подклчения к postgres (по умолчанию - admin)
 ### Запуск
 ```shell
 export DB_PASSWORD=admin ENV_NAME=dev && make dc
 ```
 
+## Документация
+[OpenAPI3.1](http://127.0.0.1:9000/docs)
+
+## Мониторинг-ресурсов
+- потребление cpu
+- текущее потребление памяти процессом / ОС / общее количество памяти OC
+- среднее время ответа на запрос
+- количество открытых соединений
+
+[МОНИТОР](http://127.0.0.1:9000/monitor)
+
+## Профайлер
+[PROFILER](http://127.0.0.1:9000/debug/pprof/)
+
 ## Тестирование
 
+## TODO
+- [ ] Добавить unit тесты
+- [ ] Добавить integration тесты
+- [ ] Добавить prometheus и grafana в docker-compose
+
 ## Команда проекта
+
