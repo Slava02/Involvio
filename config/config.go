@@ -3,57 +3,58 @@ package config
 import (
 	"fmt"
 	"github.com/ilyakaznacheev/cleanenv"
-	"github.com/joho/godotenv"
+	"log/slog"
+	"path/filepath"
+	"runtime"
 )
 
 type (
-	// Config -.
 	Config struct {
-		App  `yaml:"app"`
-		HTTP `yaml:"http"`
-		Log  `yaml:"logger"`
-		PG   `yaml:"postgres"`
+		App  `json:"app"`
+		HTTP `json:"rest"`
+		DB   `json:"db"`
+		Log  `json:"logger"`
 	}
 
-	// App -.
 	App struct {
-		Name    string `yaml:"name"    env:"APP_NAME"`
-		Version string `yaml:"version" env:"APP_VERSION"`
+		Name    string `env-required:"false" json:"name"    env:"APP_NAME"`
+		Version string `env-required:"false" json:"version" env:"APP_VERSION"`
 	}
 
-	// HTTP -.
 	HTTP struct {
-		Port string `yaml:"port" env:"HTTP_PORT"`
+		Port string `env-required:"false" json:"port" env:"HTTP_PORT"`
 	}
 
-	// Log -.
+	DB struct {
+		DBHost     string `env-required:"false" json:"host"     env:"DB_HOST"`
+		DBPort     int    `env-required:"false" json:"port"     env:"DB_PORT"`
+		DBUser     string `env-required:"false" json:"user"     env:"DB_USER"`
+		DBPassword string `env-required:"true"  json:"password" env:"DB_PASSWORD"`
+		DBName     string `env-required:"false" json:"name"     env:"DB_NAME"`
+		PoolMax    int32  `env-required:"true"  json:"pool_max" env:"PG_POOL_MAX"`
+	}
+
 	Log struct {
-		Level string `yaml:"log_level"   env:"LOG_LEVEL"`
-	}
-
-	// PG -.
-	PG struct {
-		PoolMax int    `yaml:"pool_max" env:"PG_POOL_MAX"`
-		URL     string `env-required:"true"   env:"PG_URL"`
+		Level slog.Level `env-required:"false" json:"level"   env:"LOG_LEVEL"`
 	}
 )
 
-// NewConfig returns app config.
-func NewConfig() (*Config, error) {
-	if err := godotenv.Load(".env"); err != nil {
-		return nil, fmt.Errorf("config error: %w", err)
-	}
-
+// LoadConfig returns Involvio config.
+func LoadConfig() (*Config, error) {
 	cfg := &Config{}
 
-	err := cleanenv.ReadConfig("./config/config.yml", cfg)
+	_, b, _, _ := runtime.Caller(0)
+	basePath := filepath.Dir(b)
+	configPath := filepath.Join(basePath, "config.json")
+
+	err := cleanenv.ReadConfig(configPath, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("config error: %w", err)
 	}
 
 	err = cleanenv.ReadEnv(cfg)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("env read error: %w", err)
 	}
 
 	return cfg, nil

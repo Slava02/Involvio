@@ -1,61 +1,74 @@
-// Package app configures and runs application.
+// Package Involvio configures and runs application.
 package app
 
 import (
 	"fmt"
-	postgres2 "github.com/Slava02/Involvio/internal/repo/postgres"
-	"os"
-	"os/signal"
-	"syscall"
-
-	"github.com/gin-gonic/gin"
-
 	"github.com/Slava02/Involvio/config"
-	v1 "github.com/Slava02/Involvio/internal/controller/http/v1"
-	"github.com/Slava02/Involvio/internal/usecase"
-	"github.com/Slava02/Involvio/pkg/httpserver"
-	"github.com/Slava02/Involvio/pkg/logger"
-	"github.com/Slava02/Involvio/pkg/postgres"
+	"github.com/Slava02/Involvio/internal/app/route"
+	"github.com/Slava02/Involvio/pkg/database"
+	"github.com/gofiber/contrib/otelfiber/v2"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/healthcheck"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/monitor"
+	"github.com/gofiber/fiber/v2/middleware/pprof"
+	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/jackc/pgx/v5"
+	"log/slog"
+	"os"
 )
 
 // Run creates objects via constructors.
-func Run(cfg *config.Config) {
-	// INIT LOGGER
-	l := logger.New(cfg.Log.Level)
+// TODO: добавить внедрение зависимостей
+type App struct {
+	Server *fiber.App
+}
 
-	//  INIT REPOS
-	pg, err := postgres.New(cfg.PG.URL, postgres.MaxPoolSize(cfg.PG.PoolMax))
+func NewApp() *App {
+	return &App{
+		Server: fiber.New(),
+	}
+}
+
+func Run(router *fiber.App, cfg *config.Config) {
+	// fiber middlewares
+	router.Use(logger.New())
+
+	// open telemetry
+	router.Use(otelfiber.Middleware())
+	router.Use(healthcheck.New())
+	router.Use(recover.New(recover.Config{
+		EnableStackTrace: true,
+	}))
+
+	if os.Getenv("ENV_NAME") == "dev" {
+		router.Use(pprof.New())
+		router.Get("/monitor", monitor.New())
+	}
+
+	// Connect to Database
+	pg, err := database.New(cfg, database.MaxPoolSize(cfg.DB.PoolMax), database.Isolation(pgx.ReadCommitted))
 	if err != nil {
-		l.Fatal(fmt.Errorf("app - Run - postgres.New: %w", err))
+		slog.Error("postgres connection failed", slog.String("error", err.Error()))
+		return
 	}
 	defer pg.Close()
 
-	//  INIT DEPENDENCIES
-
-	//  INIT USECASES
-	useCase := usecase.New(&usecase.Deps{
-		postgres2.New(pg),
-	})
-
-	// HTTP Server
-	handler := gin.New()
-	v1.NewRouter(handler, l, useCase)
-	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
-
-	// Waiting signal
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
-
-	select {
-	case s := <-interrupt:
-		l.Info("app - Run - signal: " + s.String())
-	case err = <-httpServer.Notify():
-		l.Error(fmt.Errorf("app - Run - httpServer.Notify: %w", err))
+	err = applyMigrations(cfg.DB)
+	if err != nil {
+		slog.Error("apply migrations failed", slog.String("error", err.Error()))
+		return
 	}
 
-	// Shutdown
-	err = httpServer.Shutdown()
-	if err != nil {
-		l.Error(fmt.Errorf("app - Run - httpServer.Shutdown: %w", err))
+	// Setup routes
+	route.SetupRoutes(router, pg)
+
+	PrintSystemData()
+	PrintMemoryInfo()
+
+	// Start server
+	slog.Info("Starting server on port: " + cfg.HTTP.Port)
+	if err := router.Listen(":" + cfg.HTTP.Port); err != nil {
+		slog.Error(fmt.Sprintf("server starting error: %v", err))
 	}
 }
