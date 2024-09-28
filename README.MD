@@ -62,7 +62,7 @@
 ![img.png](docs/img/img.png)
 
 ### База данных
-![db.png](docs/img/Untitled (5).png)
+![db.png](docs/img/db.png)
 
 ## Начало работы
 
