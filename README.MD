@@ -46,7 +46,7 @@
 Чтобы у вас была приватная группа, используйте уникальный код группы, например: Vip. Все ваши друзья должны при регистрации указывать код группы Vip, тогда бот будет организовывать встречи только между вашими участниками. Если Вы хотите организовывать встречи между разными группами, используйте в качестве разделителя запятую. Чтобы участвовать во встречах тех, кто не указал группу, то после списка групп поставьте запятую, например: Vip,777,. Для приглашения новых участников с указанием группы, используйте ссылку: https://t.me/Dirworld_bot?start=Vip. Рекомендую использовать уникальные, ассоциативные только для вашей группы коды, которые не станут использовать другие участники.
 
 ### Схема бота
-[Miro](https://miro.com/welcomeonboard/U2I4Q0xiZ0hlUzNuR0dadHBvN0Z0UVNnbktPdVR5VnAwVFVya1k2dkFsbzNrUzh6OTNYNXRvZVBtZXAxR3NXQXwzMDc0NDU3MzQ5MTY0OTMxNDg4fDI=?share_link_id=406521025617)
+![scheme.png](docs/Involvio.png)
 
 ## Технологии
 
@@ -62,57 +62,7 @@
 ![img.png](docs/img/img.png)
 
 ### База данных
-```mermaid
-erDiagram
-    SPACE {
-        integer id PK
-        varchar name
-        varchar description
-        jsonb tags
-    }
-
-    USER {
-        integer id PK
-        varchar first_name
-        varchar last_name
-        varchar username
-        varchar photo_url
-        timestamp auth_date
-    }
-
-    USER_SPACE {
-        integer user_id PK
-        integer space_id PK
-        jsonb user_tags
-        jsonb pair_tags
-        bool is_admin
-        bool is_creator
-    }
-
-    USER_EVENT {
-        integer user_id PK
-        integer event_id PK
-    }
-
-    EVENT {
-        integer id PK
-        integer space_id FK
-        varchar name
-        varchar description
-        timestamp begin_date
-        timestamp end_date
-        jsonb tags
-    }
-
-    USER_SPACE ||--o{ USER : participates_in
-    USER_SPACE ||--o{ SPACE : contains
-
-    USER_EVENT ||--o{ USER : attends
-
-    USER_EVENT ||--o{ EVENT : involves
-
-    EVENT ||--o{ SPACE : hosts
-```
+![db.png](docs/img/Untitled (5).png)
 
 ## Начало работы
 
