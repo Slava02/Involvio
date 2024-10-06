@@ -1,0 +1,12 @@
+{
+  "bot_config": {
+    "token": "6845572405:AAHZ7DpYwZaA9Q-kv5fXQAOKogIo4XPodlw",
+    "request_timeout": 60,
+    "update_timeout": 60
+  },
+  "cache_config": {
+    "address":  "localhost:6379",
+    "db": 0,
+    "password": ""
+  }
+}
