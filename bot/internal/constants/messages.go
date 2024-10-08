@@ -22,6 +22,7 @@ const (
 	PhotoMsg                 = "📸  Отправьте фото, которое будет отображаться у других пользователей"
 	WrongTimeMsg             = "Введите дату рождения в формате 11.01.2002"
 	ResumeBotMsg             = "Бот снова будет присылать уведомления!"
+	ChooseChangeDataOptMsg   = "Выберите что бы вы хотели поменять: "
 )
 
 // BUTTONS
@@ -81,6 +82,24 @@ var (
 		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("Заблокировать пользователя", "blockUser"),
+		),
+	)
+
+	ChangeCallback = tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Имя и Фамилию", "changeProfileData:fullName"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Город", "changeProfileData:city"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Род занятий", "changeProfileData:position"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Интересы", "changeProfileData:interests"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Фото", "changeProfileData:photo"),
 		),
 	)
 

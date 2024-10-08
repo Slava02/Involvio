@@ -6,6 +6,20 @@ import (
 )
 
 type Storage struct {
-	mutex sync.RWMutex
-	data  map[int64]models.User
+	Mutex sync.RWMutex
+	Data  map[int64]*models.User
+}
+
+func New() *Storage {
+	return &Storage{
+		Data: make(map[int64]*models.User),
+	}
+}
+
+func (s *Storage) GetUser(id int64) *models.User {
+	return s.Data[id]
+}
+
+func (s *Storage) UpdateUser(u *models.User) {
+	s.Data[u.TelegID] = u
 }

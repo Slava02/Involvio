@@ -262,3 +262,99 @@ func main() {
 		mux.Dispatch(bot, update)
 	}
 }
+
+//AddHandler(tm.NewConversationHandler(
+//"change_profile_data_dialog",
+//tm.NewLocalPersistence(), // we could also use `tm.NewFilePersistence("db.json")` or `&gormpersistence.GORMPersistence(db)` to keep data across bot restarts
+//tm.StateMap{
+//"": {
+//tm.NewCallbackQueryHandler(
+//`^changeProfileData`,
+//nil,
+//func(u *tm.Update) {
+//user := storage.GetUser(u.EffectiveUser().ID)
+//u.PersistenceContext.PutDataValue(user.UserName, user)
+//
+//share := tgbotapi.NewPhoto(u.EffectiveChat().ID, tgbotapi.FileID(user.Photo.FileID))
+//share.Caption = fmt.Sprintf(constants.ProfileMsg+"\n"+constants.ChooseChangeDataOptMsg, user.FullName, user.City, user.UserName, user.Position, user.Interests)
+//share.ReplyMarkup = constants.ChangeCallback
+//bot.Send(share)
+//
+//u.PersistenceContext.SetState("enter_new_data")
+//}),
+//},
+//"enter_new_data": {
+//tm.NewCallbackQueryHandler(
+//`^changeProfileData:(.+)`,
+//nil,
+//func(u *tm.Update) {
+//var msg tgbotapi.MessageConfig
+//switch strings.Split(u.CallbackData(), ":")[1] {
+//case "fullName":
+//u.PersistenceContext.PutDataValue("to_change", "fullName")
+//msg = tgbotapi.NewMessage(u.EffectiveChat().ID, constants.NameMsg)
+//case "city":
+//u.PersistenceContext.PutDataValue("to_change", "city")
+//msg = tgbotapi.NewMessage(u.EffectiveChat().ID, constants.CityMsg)
+//case "position":
+//u.PersistenceContext.PutDataValue("to_change", "position")
+//msg = tgbotapi.NewMessage(u.EffectiveChat().ID, constants.PositionMsg)
+//case "interests":
+//u.PersistenceContext.PutDataValue("to_change", "interests")
+//msg = tgbotapi.NewMessage(u.EffectiveChat().ID, constants.InterestsMsg)
+//default:
+//log.Println("unknown options")
+//}
+//bot.Send(msg)
+//
+//u.PersistenceContext.SetState("change_data")
+//}),
+//tm.NewHandler(tm.Not(tm.Or(tm.IsCommandMessage("cancel"), tm.IsCommandMessage("start"))), func(u *tm.Update) {
+//log.Println("2")
+//bot.Send(tgbotapi.NewMessage(
+//u.EffectiveChat().ID,
+//"🤖 Извините, не понял вас.",
+//))
+//}),
+//},
+//"change_data": {
+//tm.NewHandler(tm.HasText(), func(u *tm.Update) {
+//user := u.PersistenceContext.GetData()[u.EffectiveUser().UserName].(*models.User)
+//
+//toChange := u.PersistenceContext.GetData()["to_change"].(string)
+//
+//switch toChange {
+//case "fullName":
+//user.FullName = u.Message.Text
+//case "city":
+//user.City = u.Message.Text
+//case "position":
+//user.Position = u.Message.Text
+//case "interests":
+//user.Interests = u.Message.Text
+//default:
+//log.Println("unknown option")
+//}
+//
+//msg := tgbotapi.NewMessage(u.EffectiveChat().ID, "Успешно изменено!")
+//bot.Send(msg)
+//
+//u.PersistenceContext.SetState("")
+//}),
+//tm.NewHandler(tm.Not(tm.Or(tm.IsCommandMessage("cancel"), tm.IsCommandMessage("start"))), func(u *tm.Update) {
+//log.Println("1")
+//bot.Send(tgbotapi.NewMessage(
+//u.EffectiveChat().ID,
+//"🤖 Извините, не понял вас.",
+//))
+//}),
+//},
+//},
+//[]*tm.Handler{
+//tm.NewHandler(tm.IsCommandMessage("cancel"), func(u *tm.Update) {
+//u.PersistenceContext.ClearData()
+//u.PersistenceContext.SetState("")
+//bot.Send(tgbotapi.NewMessage(u.Message.Chat.ID, "Cancelled."))
+//}),
+//},
+//))

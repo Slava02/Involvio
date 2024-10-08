@@ -5,6 +5,7 @@ import (
 	"github.com/Slava02/Involvio/bot/config"
 	"github.com/Slava02/Involvio/bot/internal/constants"
 	"github.com/Slava02/Involvio/bot/internal/models"
+	"github.com/Slava02/Involvio/bot/internal/repo"
 	tm "github.com/and3rson/telemux/v2"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
@@ -38,15 +39,31 @@ func (b *Bot) Start() error {
 
 	updates := bot.GetUpdatesChan(u)
 
-	persistance := tm.NewLocalPersistence()
+	storage := repo.New()
+
+	storage.Data[670720852] = &models.User{
+		TelegID:     670720852,
+		FullName:    "Slava Zhuvaga",
+		UserName:    "",
+		Birthday:    "",
+		Description: "",
+		Gender:      "",
+		City:        "",
+		Socials:     "",
+		Position:    "",
+		Interests:   "",
+		Goal:        "",
+		Spaces:      nil,
+		Photo:       models.Photo{},
+	}
 
 	mux := tm.NewMux().
 		AddHandler(tm.NewConversationHandler(
 			"get_user_data",
-			persistance,
+			tm.NewLocalPersistence(),
 			tm.StateMap{
 				"": {
-					tm.NewHandler(tm.IsCallbackQuery(), func(u *tm.Update) {
+					tm.NewCallbackQueryHandler(`fill`, nil, func(u *tm.Update) {
 						user := u.Update.SentFrom()
 
 						file := tgbotapi.FilePath("/Users/slava/GolandProjects/Involvio/bot/internal/constants/img/Name.jpg")
@@ -63,7 +80,6 @@ func (b *Bot) Start() error {
 							),
 						)
 						bot.Send(msg)
-						u.PersistenceContext.SetState("enter_gender")
 
 						usr := &models.User{
 							TelegID:  user.ID,
@@ -85,6 +101,8 @@ func (b *Bot) Start() error {
 								usr.Photo.FileID = ""
 							}
 						}
+
+						u.PersistenceContext.SetState("enter_gender")
 						u.PersistenceContext.PutDataValue(user.UserName, usr)
 					}),
 				},
@@ -109,6 +127,12 @@ func (b *Bot) Start() error {
 						u.PersistenceContext.PutDataValue(user.UserName, user)
 
 					}),
+					tm.NewHandler(tm.Not(tm.Or(tm.IsCommandMessage("cancel"), tm.IsCommandMessage("start"))), func(u *tm.Update) {
+						bot.Send(tgbotapi.NewMessage(
+							u.EffectiveChat().ID,
+							"🤖 Извините, не понял вас.",
+						))
+					}),
 				},
 				"enter_city": {
 					tm.NewCallbackQueryHandler(`^gender:(.+)`, nil, func(u *tm.Update) {
@@ -128,6 +152,12 @@ func (b *Bot) Start() error {
 
 						u.PersistenceContext.SetState("upload_photo")
 						u.PersistenceContext.PutDataValue(user.UserName, user)
+					}),
+					tm.NewHandler(tm.Not(tm.Or(tm.IsCommandMessage("cancel"), tm.IsCommandMessage("start"))), func(u *tm.Update) {
+						bot.Send(tgbotapi.NewMessage(
+							u.EffectiveChat().ID,
+							"🤖 Извините, не понял вас.",
+						))
 					}),
 				},
 				"upload_photo": {
@@ -161,7 +191,7 @@ func (b *Bot) Start() error {
 					tm.NewHandler(tm.Not(tm.Or(tm.IsCommandMessage("cancel"), tm.IsCommandMessage("start"))), func(u *tm.Update) {
 						bot.Send(tgbotapi.NewMessage(
 							u.EffectiveChat().ID,
-							"Извините, не понял вас. Отправьте фотографию",
+							"🤖 Извините, не понял вас. Отправьте фотографию",
 						))
 					}),
 				},
@@ -182,6 +212,12 @@ func (b *Bot) Start() error {
 
 						u.PersistenceContext.SetState("enter_position")
 						u.PersistenceContext.PutDataValue(user.UserName, user)
+					}),
+					tm.NewHandler(tm.Not(tm.Or(tm.IsCommandMessage("cancel"), tm.IsCommandMessage("start"))), func(u *tm.Update) {
+						bot.Send(tgbotapi.NewMessage(
+							u.EffectiveChat().ID,
+							"🤖 Извините, не понял вас.",
+						))
 					}),
 				},
 				"enter_position": {
@@ -216,6 +252,12 @@ func (b *Bot) Start() error {
 						u.PersistenceContext.SetState("enter_interests")
 						u.PersistenceContext.PutDataValue(user.UserName, user)
 					}),
+					tm.NewHandler(tm.Not(tm.Or(tm.IsCommandMessage("cancel"), tm.IsCommandMessage("start"))), func(u *tm.Update) {
+						bot.Send(tgbotapi.NewMessage(
+							u.EffectiveChat().ID,
+							"🤖 Извините, не понял вас.",
+						))
+					}),
 				},
 				"enter_interests": {
 					tm.NewHandler(tm.HasText(), func(u *tm.Update) {
@@ -233,6 +275,12 @@ func (b *Bot) Start() error {
 						u.PersistenceContext.SetState("enter_birthday")
 						u.PersistenceContext.PutDataValue(user.UserName, user)
 					}),
+					tm.NewHandler(tm.Not(tm.Or(tm.IsCommandMessage("cancel"), tm.IsCommandMessage("start"))), func(u *tm.Update) {
+						bot.Send(tgbotapi.NewMessage(
+							u.EffectiveChat().ID,
+							"🤖 Извините, не понял вас.",
+						))
+					}),
 				},
 				"enter_birthday": {
 					tm.NewHandler(tm.Or(tm.HasText(), tm.HasRegex("^"+constants.AgainBtn)), func(u *tm.Update) {
@@ -249,6 +297,12 @@ func (b *Bot) Start() error {
 
 						u.PersistenceContext.SetState("enter_goal")
 						u.PersistenceContext.PutDataValue(user.UserName, user)
+					}),
+					tm.NewHandler(tm.Not(tm.Or(tm.IsCommandMessage("cancel"), tm.IsCommandMessage("start"))), func(u *tm.Update) {
+						bot.Send(tgbotapi.NewMessage(
+							u.EffectiveChat().ID,
+							"🤖 Извините, не понял вас.",
+						))
 					}),
 				},
 				"enter_goal": {
@@ -280,6 +334,12 @@ func (b *Bot) Start() error {
 						u.PersistenceContext.SetState("enter_group")
 						u.PersistenceContext.PutDataValue(user.UserName, user)
 					}),
+					tm.NewHandler(tm.Not(tm.Or(tm.IsCommandMessage("cancel"), tm.IsCommandMessage("start"))), func(u *tm.Update) {
+						bot.Send(tgbotapi.NewMessage(
+							u.EffectiveChat().ID,
+							"🤖 Извините, не понял вас.",
+						))
+					}),
 				},
 				"enter_group": {
 					tm.NewCallbackQueryHandler(`^goal:(.+)`, nil, func(u *tm.Update) {
@@ -297,6 +357,12 @@ func (b *Bot) Start() error {
 
 						u.PersistenceContext.SetState("check_result")
 						u.PersistenceContext.PutDataValue(user.UserName, user)
+					}),
+					tm.NewHandler(tm.Not(tm.Or(tm.IsCommandMessage("cancel"), tm.IsCommandMessage("start"))), func(u *tm.Update) {
+						bot.Send(tgbotapi.NewMessage(
+							u.EffectiveChat().ID,
+							"🤖 Извините, не понял вас.",
+						))
 					}),
 				},
 				"check_result": {
@@ -320,21 +386,11 @@ func (b *Bot) Start() error {
 
 						share := tgbotapi.NewPhoto(u.EffectiveChat().ID, tgbotapi.FileID(user.Photo.FileID))
 						share.Caption = fmt.Sprintf(constants.ProfileMsg, user.FullName, user.City, user.UserName, user.Position, user.Interests)
-						share.ReplyMarkup = constants.CheckResCallback
-						bot.Send(share)
-
-						u.PersistenceContext.SetState("final")
-					}),
-				},
-				"final": {
-					tm.NewHandler(tm.IsCallbackQuery(), func(u *tm.Update) {
-						file := tgbotapi.FilePath("/Users/slava/GolandProjects/Involvio/bot/internal/constants/img/Reminder.jpg")
-						share := tgbotapi.NewPhoto(u.EffectiveChat().ID, file)
-						share.Caption = constants.FinalMsg
-						share.ReplyMarkup = tgbotapi.NewRemoveKeyboard(false)
 						bot.Send(share)
 
 						u.PersistenceContext.SetState("")
+
+						storage.UpdateUser(user)
 					}),
 				},
 			},
@@ -370,29 +426,105 @@ func (b *Bot) Start() error {
 				bot.Send(msg)
 			},
 		)).
-		// TODO
 		AddHandler(tm.NewCallbackQueryHandler(
-			`^changeProfileData`,
+			"checkProfile",
 			nil,
 			func(u *tm.Update) {
-				user := u.PersistenceContext.GetData()[u.EffectiveUser().UserName].(*models.User)
+				user := storage.GetUser(u.EffectiveUser().ID)
 
-				msg := tgbotapi.NewMessage(u.EffectiveChat().ID, constants.NameMsg)
-				//msg.ReplyMarkup = constants.HelpCallback
-				bot.Send(msg)
+				share := tgbotapi.NewPhoto(u.EffectiveChat().ID, tgbotapi.FileID(user.Photo.FileID))
+				share.Caption = fmt.Sprintf(constants.ProfileMsg, user.FullName, user.City, user.UserName, user.Position, user.Interests)
+				bot.Send(share)
+			},
+		)).
+		AddHandler(tm.NewConversationHandler(
+			"change_profile_data_dialog",
+			tm.NewLocalPersistence(), // we could also use `tm.NewFilePersistence("db.json")` or `&gormpersistence.GORMPersistence(db)` to keep data across bot restarts
+			tm.StateMap{
+				"": {
+					tm.NewCallbackQueryHandler(
+						`^changeProfileData`,
+						nil,
+						func(u *tm.Update) {
+							user := storage.GetUser(u.EffectiveUser().ID)
+							u.PersistenceContext.PutDataValue(user.UserName, user)
 
-				user.FullName = u.EffectiveMessage().Text
+							share := tgbotapi.NewPhoto(u.EffectiveChat().ID, tgbotapi.FileID(user.Photo.FileID))
+							share.Caption = fmt.Sprintf(constants.ProfileMsg+"\n"+constants.ChooseChangeDataOptMsg, user.FullName, user.City, user.UserName, user.Position, user.Interests)
+							share.ReplyMarkup = constants.ChangeCallback
+							bot.Send(share)
 
-				u.PersistenceContext.PutDataValue(user.UserName, user)
+							u.PersistenceContext.SetState("enter_new_data")
+						}),
+				},
+				"enter_new_data": {
+					tm.NewCallbackQueryHandler(
+						`^changeProfileData:(.+)`,
+						nil,
+						func(u *tm.Update) {
+							var msg tgbotapi.MessageConfig
+							switch strings.Split(u.CallbackData(), ":")[1] {
+							case "fullName":
+								u.PersistenceContext.PutDataValue("to_change", "fullName")
+								msg = tgbotapi.NewMessage(u.EffectiveChat().ID, constants.NameMsg)
+							case "city":
+								u.PersistenceContext.PutDataValue("to_change", "city")
+								msg = tgbotapi.NewMessage(u.EffectiveChat().ID, constants.CityMsg)
+							case "position":
+								u.PersistenceContext.PutDataValue("to_change", "position")
+								msg = tgbotapi.NewMessage(u.EffectiveChat().ID, constants.PositionMsg)
+							case "interests":
+								u.PersistenceContext.PutDataValue("to_change", "interests")
+								msg = tgbotapi.NewMessage(u.EffectiveChat().ID, constants.InterestsMsg)
+							case "photo":
+								u.PersistenceContext.PutDataValue("to_change", "photo")
+								msg = tgbotapi.NewMessage(u.EffectiveChat().ID, constants.PhotoMsg)
+							default:
+								log.Println("unknown options")
+							}
+							bot.Send(msg)
 
-				msg = tgbotapi.NewMessage(
-					u.EffectiveChat().ID,
-					fmt.Sprintf(constants.CheckProfileWithGroupMsg, u.Message.Text),
-				)
-				msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(false)
-				bot.Send(msg)
-			}),
-		)
+							u.PersistenceContext.SetState("change_data")
+						}),
+				},
+				"change_data": {
+					tm.NewHandler(tm.Or(tm.HasText(), tm.HasPhoto()), func(u *tm.Update) {
+						user := u.PersistenceContext.GetData()[u.EffectiveUser().UserName].(*models.User)
+						toChange := u.PersistenceContext.GetData()["to_change"].(string)
+
+						switch toChange {
+						case "fullName":
+							user.FullName = u.Message.Text
+						case "city":
+							user.City = u.Message.Text
+						case "position":
+							user.Position = u.Message.Text
+						case "interests":
+							user.Interests = u.Message.Text
+						case "photo":
+							log.Printf("PHOTO: %s\n", u.Message.Photo[0].FileID)
+							user.Photo.FileID = u.Message.Photo[0].FileID
+						default:
+							log.Println("unknown option")
+						}
+
+						msg := tgbotapi.NewMessage(u.EffectiveChat().ID, "Успешно изменено!")
+						bot.Send(msg)
+
+						u.PersistenceContext.SetState("")
+
+						storage.UpdateUser(user)
+					}),
+				},
+			},
+			[]*tm.Handler{
+				tm.NewHandler(tm.IsCommandMessage("cancel"), func(u *tm.Update) {
+					u.PersistenceContext.ClearData()
+					u.PersistenceContext.SetState("")
+					bot.Send(tgbotapi.NewMessage(u.Message.Chat.ID, "Cancelled."))
+				}),
+			},
+		))
 
 	for update := range updates {
 		mux.Dispatch(bot, update)
