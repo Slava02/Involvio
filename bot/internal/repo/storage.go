@@ -39,9 +39,9 @@ func (s *Storage) AddGroups(username string, groups string) string {
 		if ok := s.GetGroup(group); !ok {
 			s.CreateGroup(group)
 			newGroups = append(newGroups, group)
-		} else {
-			s.JoinGroup(username, group)
 		}
+
+		s.JoinGroup(username, group)
 	}
 
 	if groups[len(groups)-1] == ',' {
@@ -49,7 +49,7 @@ func (s *Storage) AddGroups(username string, groups string) string {
 	}
 
 	var groupList string
-	if newGroups != nil {
+	if len(newGroups) != 0 {
 		if len(newGroups) > 1 {
 			groupList = strings.Join(newGroups, ",")
 		} else {

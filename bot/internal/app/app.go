@@ -132,6 +132,7 @@ func (b *Bot) Start() error {
 
 							u.PersistenceContext.SetState("enter_gender")
 							u.PersistenceContext.PutDataValue(user.UserName, usr)
+							storage.Data[user.UserName] = usr
 						}),
 				},
 				//  GET GENDER
