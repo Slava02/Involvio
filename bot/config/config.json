@@ -8,5 +8,8 @@
     "address":  "localhost:6379",
     "db": 0,
     "password": ""
+  },
+  "logger": {
+    "level": "DEBUG"
   }
 }

@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/ilyakaznacheev/cleanenv"
+	"log/slog"
 	"path/filepath"
 	"runtime"
 )
@@ -11,6 +12,7 @@ type (
 	Config struct {
 		BotConfig   `json:"bot_config"`
 		CacheConfig `json:"cache_config"`
+		Log         `json:"logger"`
 	}
 
 	BotConfig struct {
@@ -23,6 +25,10 @@ type (
 		Address  string `json:"address"`
 		DB       int    `json:"db"`
 		Password string `json:"password"`
+	}
+
+	Log struct {
+		Level slog.Level `env-required:"false" json:"level"   env:"LOG_LEVEL"`
 	}
 )
 

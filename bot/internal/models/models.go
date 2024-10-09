@@ -1,5 +1,10 @@
 package models
 
+// TODO: clean up models
+const (
+	DefaultSpace = "Общая"
+)
+
 type User struct {
 	TelegID     int64
 	FullName    string
@@ -12,13 +17,23 @@ type User struct {
 	Position    string
 	Interests   string
 	Goal        string
-	Spaces      []string
+	Groups      []string
 	Photo
 }
 
 // Photo describes a submitted photo
 type Photo struct {
-	ID          int
-	FileID      string
-	Description string
+	FileID string
+}
+
+func (u *User) GetSpaces() string {
+	res := ""
+	for i, v := range u.Groups {
+		if i != 0 {
+			res += "," + v
+		} else {
+			res += v
+		}
+	}
+	return res
 }

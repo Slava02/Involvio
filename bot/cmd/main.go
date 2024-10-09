@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Slava02/Involvio/bot/config"
 	"github.com/Slava02/Involvio/bot/internal/app"
+	"github.com/Slava02/Involvio/bot/pkg/logger"
 	"log"
 	"os"
 	"os/signal"
@@ -26,6 +27,9 @@ func main() {
 }
 
 func Run(cfg *config.Config) error {
+	// Initialize logger
+	logger.SetupLogger(cfg)
+
 	// Run the application
 	bot := app.New(cfg)
 
