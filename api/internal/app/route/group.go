@@ -1,51 +1,51 @@
 package route
 
 import (
-	"github.com/Slava02/Involvio/internal/entity"
-	"github.com/Slava02/Involvio/internal/handler/rest/v1/space"
-	"github.com/Slava02/Involvio/internal/repository"
-	"github.com/Slava02/Involvio/internal/usecase"
-	"github.com/Slava02/Involvio/pkg/database"
-	"github.com/Slava02/Involvio/pkg/valid"
+	"github.com/Slava02/Involvio/api/internal/entity"
+	"github.com/Slava02/Involvio/api/internal/handler/rest/v1/group"
+	"github.com/Slava02/Involvio/api/internal/repository"
+	"github.com/Slava02/Involvio/api/internal/usecase"
+	"github.com/Slava02/Involvio/api/pkg/database"
+	"github.com/Slava02/Involvio/api/pkg/valid"
 	"github.com/danielgtaylor/huma/v2"
 	"net/http"
 	"reflect"
 	"sync"
 )
 
-type SpaceDeps struct {
+type GroupDeps struct {
 	Validator *valid.Validator
 }
 
 //nolint:funlen
-func setupSpaceRoutes(api huma.API, pg *database.Postgres, deps *SpaceDeps) {
+func SetupGroupRoutes(api huma.API, pg *database.Postgres, deps *GroupDeps) {
 	o := sync.Once{}
-	spaceUseCase := usecase.NewSpaceUseCase(repository.NewSpaceRepository(&o, pg))
+	groupUseCase := usecase.NewGroupUseCase(repository.NewGroupRepository(&o, pg))
 
-	spaceHandler := space.NewSpaceHandler(spaceUseCase)
+	groupHandler := group.NewGroupHandler(groupUseCase)
 
 	registry := huma.NewMapRegistry("#/components/schemas/", huma.DefaultSchemaNamer)
-	spaceSchema := huma.SchemaFromType(registry, reflect.TypeOf(&entity.Space{}))
+	groupSchema := huma.SchemaFromType(registry, reflect.TypeOf(&entity.Group{}))
 
 	huma.Register(api, huma.Operation{
-		OperationID:   "CreateSpace",
+		OperationID:   "CreateGroup",
 		Method:        http.MethodPost,
-		Path:          "/spaces",
-		Summary:       "create new space",
-		Description:   "Create a new space record.",
-		Tags:          []string{"Spaces"},
+		Path:          "/groups",
+		Summary:       "create new group",
+		Description:   "Create a new group record.",
+		Tags:          []string{"Groups"},
 		DefaultStatus: http.StatusCreated,
 		Responses: map[string]*huma.Response{
 			"201": {
-				Description: "ISpaceUC created",
+				Description: "IGroupUC created",
 				Content: map[string]*huma.MediaType{
 					"application/json": {
-						Schema: spaceSchema,
+						Schema: groupSchema,
 					},
 				},
 				Headers: map[string]*huma.Param{
 					"Location": {
-						Description: "URL of the newly created space",
+						Description: "URL of the newly created group",
 						Schema:      &huma.Schema{Type: "string"},
 						Required:    true,
 					},
@@ -79,21 +79,21 @@ func setupSpaceRoutes(api huma.API, pg *database.Postgres, deps *SpaceDeps) {
 				},
 			},
 		},
-	}, spaceHandler.CreateSpace)
+	}, groupHandler.CreateGroup)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "GetSpace",
+		OperationID: "GetGroup",
 		Method:      http.MethodGet,
-		Path:        "/spaces/{id}",
-		Summary:     "space by id",
-		Description: "Get space by id.",
-		Tags:        []string{"Spaces"},
+		Path:        "/groups/{name}",
+		Summary:     "group by name",
+		Description: "Get group by name.",
+		Tags:        []string{"Groups"},
 		Responses: map[string]*huma.Response{
 			"200": {
-				Description: "ISpaceUC response",
+				Description: "IGroupUC response",
 				Content: map[string]*huma.MediaType{
 					"application/json": {
-						Schema: spaceSchema,
+						Schema: groupSchema,
 					},
 				},
 			},
@@ -112,7 +112,7 @@ func setupSpaceRoutes(api huma.API, pg *database.Postgres, deps *SpaceDeps) {
 				},
 			},
 			"404": {
-				Description: "ISpaceUC not found",
+				Description: "IGroupUC not found",
 				Content: map[string]*huma.MediaType{
 					"application/json": {
 						Schema: &huma.Schema{
@@ -138,23 +138,23 @@ func setupSpaceRoutes(api huma.API, pg *database.Postgres, deps *SpaceDeps) {
 				},
 			},
 		},
-	}, spaceHandler.GetSpace)
+	}, groupHandler.GetGroup)
 
 	huma.Register(api, huma.Operation{
-		OperationID:   "DeleteSpace",
+		OperationID:   "DeleteGroup",
 		Method:        http.MethodDelete,
-		Path:          "/spaces/{id}",
-		Summary:       "delete space",
-		Description:   "delete space",
-		Tags:          []string{"Spaces"},
+		Path:          "/groups/{name}",
+		Summary:       "delete group",
+		Description:   "[NOT NEEDED] delete group",
+		Tags:          []string{"Groups"},
 		DefaultStatus: http.StatusCreated,
 		Responses: map[string]*huma.Response{
 			"204": {
-				Description: "ISpaceUC deleted",
+				Description: "IGroupUC deleted",
 				Content:     map[string]*huma.MediaType{},
 			},
 			"404": {
-				Description: "ISpaceUC not found",
+				Description: "IGroupUC not found",
 				Content: map[string]*huma.MediaType{
 					"application/json": {
 						Schema: &huma.Schema{
@@ -180,19 +180,19 @@ func setupSpaceRoutes(api huma.API, pg *database.Postgres, deps *SpaceDeps) {
 				},
 			},
 		},
-	}, spaceHandler.DeleteSpace)
+	}, groupHandler.DeleteGroup)
 
 	huma.Register(api, huma.Operation{
-		OperationID:   "JoinSpace",
+		OperationID:   "JoinGroup",
 		Method:        http.MethodPost,
-		Path:          "/spaces/join",
-		Summary:       "join space",
-		Description:   "join space",
-		Tags:          []string{"Spaces"},
+		Path:          "/groups/join",
+		Summary:       "join group",
+		Description:   "join group",
+		Tags:          []string{"Groups"},
 		DefaultStatus: http.StatusCreated,
 		Responses: map[string]*huma.Response{
 			"201": {
-				Description: "joined ISpaceUC",
+				Description: "joined IGroupUC",
 				Content:     map[string]*huma.MediaType{},
 			},
 			"400": {
@@ -223,5 +223,48 @@ func setupSpaceRoutes(api huma.API, pg *database.Postgres, deps *SpaceDeps) {
 				},
 			},
 		},
-	}, spaceHandler.JoinSpace)
+	}, groupHandler.JoinGroup)
+
+	huma.Register(api, huma.Operation{
+		OperationID:   "LeaveGroup",
+		Method:        http.MethodPost,
+		Path:          "/groups/leave",
+		Summary:       "leave group",
+		Description:   "leave group",
+		Tags:          []string{"Groups"},
+		DefaultStatus: http.StatusCreated,
+		Responses: map[string]*huma.Response{
+			"201": {
+				Description: "leaved IGroupUC",
+				Content:     map[string]*huma.MediaType{},
+			},
+			"400": {
+				Description: "Invalid request",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{
+							Type: "object",
+							Properties: map[string]*huma.Schema{
+								"message": {Type: "string"},
+								"field":   {Type: "string"},
+							},
+						},
+					},
+				},
+			},
+			"500": {
+				Description: "Internal server error",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{
+							Type: "object",
+							Properties: map[string]*huma.Schema{
+								"error": {Type: "string"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, groupHandler.LeaveGroup)
 }

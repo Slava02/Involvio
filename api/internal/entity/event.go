@@ -7,7 +7,7 @@ type Event struct {
 	ID          int       `json:"id" doc:"event id" example:"123"`
 	Name        string    `json:"name" doc:"event name" example:"random coffee"`
 	Description string    `json:"description" doc:"event description" example:"super event"`
-	Date        time.Time `json:"date" doc:"event time" example:"05.09.2002"`
+	Date        time.Time `json:"date" doc:"event time RFC 3339" example:"2020-12-09T16:09:53+00:00"`
 	Users       []User    `json:"users" doc:"event members"`
 }
 

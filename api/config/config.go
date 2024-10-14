@@ -26,8 +26,8 @@ type (
 	}
 
 	DB struct {
-		DBHost     string `env-required:"false" json:"host"     env:"DB_HOST"`
-		DBPort     int    `env-required:"false" json:"port"     env:"DB_PORT"`
+		DBHost     string `env-required:"false" json:"host_local"     env:"DB_HOST"`
+		DBPort     int    `env-required:"false" json:"port_local"     env:"DB_PORT"`
 		DBUser     string `env-required:"false" json:"user"     env:"DB_USER"`
 		DBPassword string `env-required:"true"  json:"password" env:"DB_PASSWORD"`
 		DBName     string `env-required:"false" json:"name"     env:"DB_NAME"`

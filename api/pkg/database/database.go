@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Masterminds/squirrel"
-	"github.com/Slava02/Involvio/config"
+	"github.com/Slava02/Involvio/api/config"
 	"log/slog"
 	"time"
 

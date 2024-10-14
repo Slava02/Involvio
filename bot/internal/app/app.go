@@ -46,7 +46,7 @@ func (b *Bot) Start() error {
 		Photo: models.Photo{
 			FileID: "AgACAgEAAxUAAWcGlsVgWTNzWanDDpp7_QSRJNSQAALepzEbVGP6Jw8ThFSmJn5mAQADAgADYQADNgQ",
 		},
-		Groups: []string{"Общая"},
+		Groups: []string{"Общая", "Алкаши", "Бомжи", "Программисты"},
 	}
 
 	//  INIT UPDATES
@@ -564,7 +564,7 @@ func (b *Bot) Start() error {
 							user := u.PersistenceContext.GetData()[u.EffectiveUser().UserName].(*models.User)
 
 							if u.Message.Text == constants.GroupBtn {
-								storage.AddGroups(user.UserName, models.DefaultSpace)
+								storage.AddGroups(user.UserName, models.DefaultGroup)
 							} else {
 								newGroups := storage.AddGroups(user.UserName, u.EffectiveMessage().Text)
 								if newGroups != "" {
@@ -582,7 +582,7 @@ func (b *Bot) Start() error {
 							msg := tgbotapi.NewMessage(
 								u.EffectiveChat().ID,
 								//  TODO: fix
-								fmt.Sprintf(constants.CheckProfileWithGroupMsg, user.GetSpaces()),
+								fmt.Sprintf(constants.CheckProfileWithGroupMsg, strings.Join(storage.GetGroups(user.UserName), ",")),
 							)
 							msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(false)
 							bot.Send(msg)
@@ -788,6 +788,7 @@ func (b *Bot) Start() error {
 			},
 		)).
 		//  HELP: CHANGE GROUPS DIALOG
+		// TODO: add delete group option
 		AddHandler(tm.NewConversationHandler(
 			"change_groups_dialog",
 			tm.NewLocalPersistence(),
@@ -806,15 +807,22 @@ func (b *Bot) Start() error {
 							user := storage.GetUser(u.EffectiveUser().UserName)
 							u.PersistenceContext.PutDataValue(user.UserName, user)
 
-							msg := tgbotapi.NewMessage(u.EffectiveChat().ID, constants.GroupCodeMsg)
-							bot.Send(msg)
+							groups := storage.GetGroups(user.UserName)
+
+							//msg := tgbotapi.NewMessage(u.EffectiveChat().ID, constants.GroupCodeMsg)
+							msg := tgbotapi.NewMessage(u.EffectiveChat().ID, constants.ChangeGroupMsg)
+							rows := CreateInlineKeyBoard(groups, "changeGroups")
+							msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(rows...)
+							if _, err := bot.Send(msg); err != nil {
+								log.Error("Error while sending message: ", err.Error())
+							}
 
 							u.PersistenceContext.SetState("update_groups")
 						}),
 				},
 				//  UPDATE GROUPS
 				"update_groups": {
-					tm.NewHandler(tm.HasText(),
+					tm.NewHandler(tm.Or(tm.HasText(), tm.IsCallbackQuery()),
 						func(u *tm.Update) {
 							const op = "HELP: CHANGE GROUPS DIALOG: UPDATE GROUPS"
 							log := slog.With(
@@ -825,21 +833,24 @@ func (b *Bot) Start() error {
 
 							user := u.PersistenceContext.GetData()[u.EffectiveUser().UserName].(*models.User)
 
-							newGroups := storage.AddGroups(user.UserName, u.EffectiveMessage().Text)
-							if newGroups != "" {
-								msg := tgbotapi.NewMessage(
-									u.EffectiveChat().ID,
-									fmt.Sprintf(constants.NewGroupsMsg, newGroups),
-								)
-								msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(false)
-								bot.Send(msg)
+							if u.CallbackQuery != nil {
+								group := strings.Split(u.CallbackData(), ":")[1]
+								storage.LeaveGroup(user.UserName, group)
+							} else {
+								newGroups := storage.AddGroups(user.UserName, u.EffectiveMessage().Text)
+								if newGroups != "" {
+									msg := tgbotapi.NewMessage(
+										u.EffectiveChat().ID,
+										fmt.Sprintf(constants.NewGroupsMsg, newGroups),
+									)
+									msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(false)
+									bot.Send(msg)
+								}
 							}
-
-							log.Info("USER GROUPS: ", user.Groups)
 
 							msg := tgbotapi.NewMessage(
 								u.EffectiveChat().ID,
-								fmt.Sprintf(constants.ChangedGroupMsg, user.GetSpaces()))
+								fmt.Sprintf(constants.ChangedGroupMsg, strings.Join(storage.GetGroups(user.UserName), ",")))
 							bot.Send(msg)
 
 							u.PersistenceContext.SetState("")

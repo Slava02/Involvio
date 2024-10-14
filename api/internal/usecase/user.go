@@ -3,20 +3,20 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"github.com/Slava02/Involvio/internal/entity"
-	"github.com/Slava02/Involvio/internal/usecase/commands"
-	"github.com/Slava02/Involvio/pkg/hexid"
+	"github.com/Slava02/Involvio/api/internal/entity"
+	"github.com/Slava02/Involvio/api/internal/usecase/commands"
 	"log/slog"
+	"time"
 )
 
 type IUserRepository interface {
-	GetUserData(ctx context.Context, id int) (*entity.User, error)
-	GetUserForms(ctx context.Context, userId int) ([]*entity.Form, error)
+	BlockUser(ctx context.Context, who, whom int) error
+	SetHoliday(ctx context.Context, id int, tillDate time.Time) (*entity.User, error)
+	CancelHoliday(ctx context.Context, id int) error
+	GetUserByUsername(ctx context.Context, username string) (*entity.User, error)
+	GetUserByID(ctx context.Context, id int) (*entity.User, error)
 	InsertUser(ctx context.Context, user *entity.User) error
-	UpdateUser(ctx context.Context, id int, firstName, lastName, userName, photoURL string) (*entity.User, error)
-	DeleteUser(ctx context.Context, userId, spaceId int) error
-	GetForm(ctx context.Context, userId, spaceId int) (*entity.Form, error)
-	UpdateForm(ctx context.Context, userId, spaceId int, userTags, pairTags entity.Tags) error
+	UpdateUser(ctx context.Context, id int, fullName, city, position, interests, photoURL string) (*entity.User, error)
 }
 
 func NewUserUseCase(ur IUserRepository) *UserUseCase {
@@ -27,35 +27,8 @@ type UserUseCase struct {
 	userRepo IUserRepository
 }
 
-func (uc *UserUseCase) GetUser(ctx context.Context, cmd commands.UserByIdCommand) (*entity.User, []*entity.Form, error) {
-	const op = "Usecase:GetForm"
-
-	fail := func(err error) (*entity.User, []*entity.Form, error) {
-		return nil, nil, fmt.Errorf("%s: %w", op, err)
-	}
-
-	log := slog.With(
-		slog.String("op", op),
-	)
-	log.Debug(op)
-
-	userData, err := uc.userRepo.GetUserData(ctx, cmd.ID)
-	if err != nil {
-		log.Debug("couldn't get user: ", err.Error())
-		return fail(err)
-	}
-
-	userForms, err := uc.userRepo.GetUserForms(ctx, cmd.ID)
-	if err != nil {
-		log.Debug("couldn't get user: ", err.Error())
-		return fail(err)
-	}
-
-	return userData, userForms, nil
-}
-
-func (uc *UserUseCase) DeleteUser(ctx context.Context, cmd commands.FormByIdCommand) error {
-	const op = "Usecase:DeleteUser"
+func (uc *UserUseCase) BlockUser(ctx context.Context, cmd commands.BlockUserCommand) error {
+	const op = "UseCase:BlockUser"
 
 	fail := func(err error) error {
 		return fmt.Errorf("%s: %w", op, err)
@@ -63,78 +36,22 @@ func (uc *UserUseCase) DeleteUser(ctx context.Context, cmd commands.FormByIdComm
 
 	log := slog.With(
 		slog.String("op", op),
+		slog.Int("who", cmd.WhoID),
+		slog.Int("whom", cmd.WhomID),
 	)
 	log.Debug(op)
 
-	_, _, err := uc.GetUser(ctx, commands.UserByIdCommand{ID: cmd.UserID})
+	err := uc.userRepo.BlockUser(ctx, cmd.WhoID, cmd.WhomID)
 	if err != nil {
-		log.Debug("couldn't get user: ", err.Error())
-		return fail(err)
-	}
-
-	err = uc.userRepo.DeleteUser(ctx, cmd.UserID, cmd.SpaceID)
-	if err != nil {
-		log.Debug("couldn't delete user: ", err.Error())
+		log.Debug("couldn't block user: ", err.Error())
 		return fail(err)
 	}
 
 	return nil
 }
 
-func (uc *UserUseCase) GetForm(ctx context.Context, cmd commands.FormByIdCommand) (*entity.Form, error) {
-	const op = "Usecase:GetForm"
-
-	fail := func(err error) (*entity.Form, error) {
-		return nil, fmt.Errorf("%s: %w", op, err)
-	}
-
-	log := slog.With(
-		slog.String("op", op),
-	)
-	log.Debug(op)
-
-	form, err := uc.userRepo.GetForm(ctx, cmd.UserID, cmd.SpaceID)
-	if err != nil {
-		return fail(err)
-	}
-
-	return form, nil
-}
-
-func (uc *UserUseCase) UpdateForm(ctx context.Context, cmd commands.UpdateFormCommand) (*entity.User, []*entity.Form, error) {
-	const op = "Usecase:UpdateForm"
-
-	fail := func(err error) (*entity.User, []*entity.Form, error) {
-		return nil, nil, fmt.Errorf("%s: %w", op, err)
-	}
-
-	log := slog.With(
-		slog.String("op", op),
-	)
-	log.Debug(op)
-
-	_, err := uc.GetForm(ctx, commands.FormByIdCommand{UserID: cmd.UserID, SpaceID: cmd.SpaceID})
-	if err != nil {
-		log.Debug("couldn't get form: ", err.Error())
-		return fail(err)
-	}
-
-	err = uc.userRepo.UpdateForm(ctx, cmd.UserID, cmd.SpaceID, cmd.UserTags, cmd.PairTags)
-	if err != nil {
-		return fail(err)
-	}
-
-	user, forms, err := uc.GetUser(ctx, commands.UserByIdCommand{ID: cmd.UserID})
-	if err != nil {
-		log.Debug("couldn't get form: ", err.Error())
-		return fail(err)
-	}
-
-	return user, forms, nil
-}
-
-func (uc *UserUseCase) CreateUser(ctx context.Context, cmd commands.CreateUserCommand) (*entity.User, error) {
-	const op = "Usecase:CreateUser"
+func (uc *UserUseCase) SetHoliday(ctx context.Context, cmd commands.SetHolidayCommand) (*entity.User, error) {
+	const op = "UseCase:SetHoliday"
 
 	fail := func(err error) (*entity.User, error) {
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -142,34 +59,44 @@ func (uc *UserUseCase) CreateUser(ctx context.Context, cmd commands.CreateUserCo
 
 	log := slog.With(
 		slog.String("op", op),
+		slog.Int("userID", cmd.ID),
+		slog.String("tillDate", cmd.TillDate.String()),
 	)
 	log.Debug(op)
 
-	userId, err := hexid.Generate()
+	user, err := uc.userRepo.SetHoliday(ctx, cmd.ID, cmd.TillDate)
 	if err != nil {
-		log.Error("couldn't generate id: ", err.Error())
-		return fail(err)
-	}
-
-	user := &entity.User{
-		ID:        userId,
-		FirstName: cmd.FirstName,
-		LastName:  cmd.LastName,
-		UserName:  cmd.UserName,
-		PhotoURL:  cmd.PhotoURL,
-		AuthDate:  cmd.AuthDate,
-	}
-
-	err = uc.userRepo.InsertUser(ctx, user)
-	if err != nil {
+		log.Debug("couldn't set holiday: ", err.Error())
 		return fail(err)
 	}
 
 	return user, nil
 }
 
-func (uc *UserUseCase) UpdateUser(ctx context.Context, cmd commands.UpdateUserCommand) (*entity.User, error) {
-	const op = "Usecase:UpdateUser"
+func (uc *UserUseCase) CancelHoliday(ctx context.Context, cmd commands.CancelHolidayCommand) error {
+	const op = "UseCase:CancelHoliday"
+
+	fail := func(err error) error {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	log := slog.With(
+		slog.String("op", op),
+		slog.Int("userID", cmd.ID),
+	)
+	log.Debug(op)
+
+	err := uc.userRepo.CancelHoliday(ctx, cmd.ID)
+	if err != nil {
+		log.Debug("couldn't cancel holiday: ", err.Error())
+		return fail(err)
+	}
+
+	return nil
+}
+
+func (uc *UserUseCase) GetUser(ctx context.Context, cmd commands.UserByUsernameCommand) (*entity.User, error) {
+	const op = "UseCase:GetUser"
 
 	fail := func(err error) (*entity.User, error) {
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -180,13 +107,57 @@ func (uc *UserUseCase) UpdateUser(ctx context.Context, cmd commands.UpdateUserCo
 	)
 	log.Debug(op)
 
-	_, _, err := uc.GetUser(ctx, commands.UserByIdCommand{ID: cmd.ID})
+	user, err := uc.userRepo.GetUserByUsername(ctx, cmd.Username)
 	if err != nil {
 		log.Debug("couldn't get user: ", err.Error())
 		return fail(err)
 	}
 
-	user, err := uc.userRepo.UpdateUser(ctx, cmd.ID, cmd.FirstName, cmd.LastName, cmd.UserName, cmd.PhotoURL)
+	return user, nil
+}
+
+func (uc *UserUseCase) CreateUser(ctx context.Context, cmd commands.CreateUserCommand) error {
+	const op = "UseCase:CreateUser"
+
+	fail := func(err error) error {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	log := slog.With(
+		slog.String("op", op),
+		slog.String("username", cmd.User.UserName),
+		slog.Int("userID", cmd.User.ID),
+	)
+	log.Debug(op)
+
+	err := uc.userRepo.InsertUser(ctx, cmd.User)
+	if err != nil {
+		return fail(err)
+	}
+
+	return nil
+}
+
+func (uc *UserUseCase) UpdateUser(ctx context.Context, cmd commands.UpdateUserCommand) (*entity.User, error) {
+	const op = "UseCase:UpdateUser"
+
+	fail := func(err error) (*entity.User, error) {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	log := slog.With(
+		slog.String("op", op),
+		slog.Int("userID", cmd.ID),
+	)
+	log.Debug(op)
+
+	_, err := uc.userRepo.GetUserByID(ctx, cmd.ID)
+	if err != nil {
+		log.Debug("couldn't get user: ", err.Error())
+		return fail(err)
+	}
+
+	user, err := uc.userRepo.UpdateUser(ctx, cmd.ID, cmd.FullName, cmd.City, cmd.Position, cmd.Interests, cmd.PhotoURL)
 	if err != nil {
 		log.Debug("couldn't update user: ", err.Error())
 		return fail(err)

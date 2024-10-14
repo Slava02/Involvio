@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/Slava02/Involvio/internal/entity"
+	"github.com/Slava02/Involvio/api/internal/entity"
 	"time"
 )
 
@@ -11,31 +11,39 @@ type (
 		ID int
 	}
 
-	FormByIdCommand struct {
-		UserID  int
-		SpaceID int
+	UserByUsernameCommand struct {
+		Username string
 	}
 
-	UpdateFormCommand struct {
-		UserID   int
-		SpaceID  int
-		UserTags entity.Tags
-		PairTags entity.Tags
+	FormByIdCommand struct {
+		UserID  int
+		GroupID int
+	}
+
+	BlockUserCommand struct {
+		WhoID  int
+		WhomID int
+	}
+
+	SetHolidayCommand struct {
+		ID       int
+		TillDate time.Time
+	}
+
+	CancelHolidayCommand struct {
+		ID int
 	}
 
 	UpdateUserCommand struct {
 		ID        int
-		FirstName string
-		LastName  string
-		UserName  string
+		FullName  string
 		PhotoURL  string
+		City      string
+		Position  string
+		Interests string
 	}
 
 	CreateUserCommand struct {
-		FirstName string
-		LastName  string
-		UserName  string
-		PhotoURL  string
-		AuthDate  time.Time
+		User *entity.User
 	}
 )

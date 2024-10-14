@@ -3,25 +3,23 @@ package user
 import (
 	"context"
 	"errors"
-	"github.com/Slava02/Involvio/internal/entity"
-	"github.com/Slava02/Involvio/internal/repository"
-	"github.com/Slava02/Involvio/internal/usecase"
-	"github.com/Slava02/Involvio/internal/usecase/commands"
+	"github.com/Slava02/Involvio/api/internal/entity"
+	"github.com/Slava02/Involvio/api/internal/repository"
+	"github.com/Slava02/Involvio/api/internal/usecase"
+	"github.com/Slava02/Involvio/api/internal/usecase/commands"
+	"github.com/danielgtaylor/huma/v2"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	"log/slog"
-	"time"
-
-	"github.com/danielgtaylor/huma/v2"
 )
 
 type IUserUseCase interface {
-	GetUser(ctx context.Context, cmd commands.UserByIdCommand) (*entity.User, []*entity.Form, error)
-	CreateUser(ctx context.Context, cmd commands.CreateUserCommand) (*entity.User, error)
+	GetUser(ctx context.Context, cmd commands.UserByUsernameCommand) (*entity.User, error)
+	CreateUser(ctx context.Context, cmd commands.CreateUserCommand) error
 	UpdateUser(ctx context.Context, cmd commands.UpdateUserCommand) (*entity.User, error)
-	DeleteUser(ctx context.Context, cmd commands.FormByIdCommand) error
-	GetForm(ctx context.Context, cmd commands.FormByIdCommand) (*entity.Form, error)
-	UpdateForm(ctx context.Context, cmd commands.UpdateFormCommand) (*entity.User, []*entity.Form, error)
+	BlockUser(ctx context.Context, cmd commands.BlockUserCommand) error
+	SetHoliday(ctx context.Context, cmd commands.SetHolidayCommand) (*entity.User, error)
+	CancelHoliday(ctx context.Context, cmd commands.CancelHolidayCommand) error
 }
 
 var _ IUserUseCase = (*usecase.UserUseCase)(nil)
@@ -36,8 +34,8 @@ func NewUserHandler(uc IUserUseCase) *UserHandler {
 	return &UserHandler{userUC: uc}
 }
 
-func (uh *UserHandler) GetUserWithForms(ctx context.Context, req *UserByIdRequest) (*UserWithFormsResponse, error) {
-	const op = "Handler:GetUserWithForms"
+func (uh *UserHandler) GetUser(ctx context.Context, req *UserByUsernameRequest) (*UserRequestResponse, error) {
+	const op = "Handler:GetUser"
 
 	tracer := otel.Tracer(tracerName)
 	_, span := tracer.Start(ctx, op, trace.WithSpanKind(trace.SpanKindServer))
@@ -45,16 +43,16 @@ func (uh *UserHandler) GetUserWithForms(ctx context.Context, req *UserByIdReques
 
 	log := slog.With(
 		slog.String("op", op),
-		slog.Int("user id", req.ID),
+		slog.String("username", req.Username),
 	)
 	log.Debug(op)
 
-	cmd := commands.UserByIdCommand{ID: req.ID}
+	cmd := commands.UserByUsernameCommand{Username: req.Username}
 
-	user, forms, err := uh.userUC.GetUser(ctx, cmd)
+	user, err := uh.userUC.GetUser(ctx, cmd)
 	if err != nil {
 		switch {
-		case errors.Is(err, repository.ErrUserNotFound):
+		case errors.Is(err, repository.ErrNotFound):
 			log.Info("couldn't get user: ", err.Error())
 			return nil, huma.Error404NotFound(err.Error())
 		default:
@@ -63,12 +61,12 @@ func (uh *UserHandler) GetUserWithForms(ctx context.Context, req *UserByIdReques
 		}
 	}
 
-	resp := ToUserWithFormsOutputFromEntity(user, forms)
+	resp := ToUserOutputFromEntity(user)
 
 	return resp, nil
 }
 
-func (uh *UserHandler) CreateUser(ctx context.Context, req *CreateUserRequest) (*UserResponse, error) {
+func (uh *UserHandler) CreateUser(ctx context.Context, req *UserRequestResponse) (*struct{}, error) {
 	const op = "Handler:CreateUser"
 
 	tracer := otel.Tracer(tracerName)
@@ -77,38 +75,34 @@ func (uh *UserHandler) CreateUser(ctx context.Context, req *CreateUserRequest) (
 
 	log := slog.With(
 		slog.String("op", op),
+		slog.String("username", req.Body.UserName),
+		slog.Int("id", req.Body.ID),
 	)
 	log.Debug(op)
 
 	cmd := commands.CreateUserCommand{
-		FirstName: req.Body.FirstName,
-		LastName:  req.Body.LastName,
-		UserName:  req.Body.Username,
-		PhotoURL:  req.Body.PhotoURL,
-		AuthDate:  time.Now(),
+		User: req.Body.User,
 	}
 
-	user, err := uh.userUC.CreateUser(ctx, cmd)
+	err := uh.userUC.CreateUser(ctx, cmd)
 	if err != nil {
 		switch {
-		case errors.Is(err, repository.ErrUserAlreadyExists):
+		case errors.Is(err, repository.ErrAlreadyExists):
 			log.Info("couldn't create user: ", err.Error())
-			return nil, huma.Error400BadRequest("user in space already exists")
-		case errors.Is(err, repository.ErrUserNotFound):
+			return &struct{}{}, huma.Error400BadRequest("user in group already exists")
+		case errors.Is(err, repository.ErrNotFound):
 			log.Info("couldn't create user: ", err.Error())
-			return nil, huma.Error404NotFound("space not found")
+			return &struct{}{}, huma.Error404NotFound("group not found")
 		default:
 			log.Error("couldn't create user: ", err.Error())
-			return nil, huma.Error500InternalServerError("internal service error")
+			return &struct{}{}, huma.Error500InternalServerError("internal service error")
 		}
 	}
 
-	resp := ToUserOutputFromEntity(user)
-
-	return resp, nil
+	return &struct{}{}, nil
 }
 
-func (uh *UserHandler) UpdateUser(ctx context.Context, req *UpdateUserRequest) (*UserResponse, error) {
+func (uh *UserHandler) UpdateUser(ctx context.Context, req *UpdateUserRequest) (*UserRequestResponse, error) {
 	const op = "Handler:UpdateUser"
 
 	tracer := otel.Tracer(tracerName)
@@ -121,18 +115,19 @@ func (uh *UserHandler) UpdateUser(ctx context.Context, req *UpdateUserRequest) (
 	log.Debug(op)
 
 	cmd := commands.UpdateUserCommand{
-		ID:        req.ID,
-		FirstName: req.Body.FirstName,
-		LastName:  req.Body.LastName,
-		UserName:  req.Body.Username,
-		PhotoURL:  req.Body.Username,
+		ID:        req.Body.ID,
+		FullName:  req.Body.FullName,
+		PhotoURL:  req.Body.PhotoURL,
+		City:      req.Body.City,
+		Position:  req.Body.Position,
+		Interests: req.Body.Interests,
 	}
 
 	user, err := uh.userUC.UpdateUser(ctx, cmd)
 
 	if err != nil {
 		switch {
-		case errors.Is(err, repository.ErrUserNotFound):
+		case errors.Is(err, repository.ErrNotFound):
 			log.Info("couldn't update user: ", err.Error())
 			return nil, huma.Error404NotFound(err.Error())
 		default:
@@ -146,8 +141,8 @@ func (uh *UserHandler) UpdateUser(ctx context.Context, req *UpdateUserRequest) (
 	return resp, nil
 }
 
-func (uh *UserHandler) DeleteUser(ctx context.Context, req *DeleteUserRequest) (*struct{}, error) {
-	const op = "Handler:DeleteUser"
+func (uh *UserHandler) BlockUser(ctx context.Context, req *BlockUserRequest) (*struct{}, error) {
+	const op = "Handler:BlockUser"
 
 	tracer := otel.Tracer(tracerName)
 	_, span := tracer.Start(ctx, op, trace.WithSpanKind(trace.SpanKindServer))
@@ -158,25 +153,25 @@ func (uh *UserHandler) DeleteUser(ctx context.Context, req *DeleteUserRequest) (
 	)
 	log.Debug(op)
 
-	cmd := commands.FormByIdCommand{UserID: req.UserId, SpaceID: req.SpaceId}
+	cmd := commands.BlockUserCommand{
+		WhoID:  req.Body.WhoID,
+		WhomID: req.Body.WhomID,
+	}
 
-	err := uh.userUC.DeleteUser(ctx, cmd)
+	err := uh.userUC.BlockUser(ctx, cmd)
 	if err != nil {
 		switch {
-		case errors.Is(err, repository.ErrUserNotFound):
-			log.Info("couldn't delete user: ", err.Error())
-			return nil, huma.Error404NotFound(err.Error())
 		default:
-			log.Error("couldn't delete user: ", err.Error())
-			return nil, huma.Error500InternalServerError(err.Error())
+			log.Error("couldn't block user: ", err.Error())
+			return nil, huma.Error500InternalServerError("internal service error")
 		}
 	}
 
 	return &struct{}{}, nil
 }
 
-func (uh *UserHandler) GetForm(ctx context.Context, req *FormByIdRequest) (*FormResponse, error) {
-	const op = "Handler:DeleteUser"
+func (uh *UserHandler) SetHoliday(ctx context.Context, req *SetHolidayRequest) (*UserRequestResponse, error) {
+	const op = "Handler:SetHoliday"
 
 	tracer := otel.Tracer(tracerName)
 	_, span := tracer.Start(ctx, op, trace.WithSpanKind(trace.SpanKindServer))
@@ -187,27 +182,27 @@ func (uh *UserHandler) GetForm(ctx context.Context, req *FormByIdRequest) (*Form
 	)
 	log.Debug(op)
 
-	cmd := commands.FormByIdCommand{UserID: req.UserID, SpaceID: req.SpaceID}
+	cmd := commands.SetHolidayCommand{
+		ID:       req.Body.ID,
+		TillDate: req.Body.TillDate,
+	}
 
-	form, err := uh.userUC.GetForm(ctx, cmd)
+	user, err := uh.userUC.SetHoliday(ctx, cmd)
 	if err != nil {
 		switch {
-		case errors.Is(err, repository.ErrUserNotFound):
-			log.Info("couldn't get form: ", err.Error())
-			return nil, huma.Error404NotFound(err.Error())
 		default:
-			log.Error("couldn't get form: ", err.Error())
-			return nil, huma.Error500InternalServerError(err.Error())
+			log.Error("couldn't set holiday: ", err.Error())
+			return nil, huma.Error500InternalServerError("internal service error")
 		}
 	}
 
-	resp := ToFormOutputFromEntity(form)
+	resp := ToUserOutputFromEntity(user)
 
 	return resp, nil
 }
 
-func (uh *UserHandler) UpdateForm(ctx context.Context, req *UpdateFormRequest) (*UserWithFormsResponse, error) {
-	const op = "Handler:UpdateForm"
+func (uh *UserHandler) CancelHoliday(ctx context.Context, req *UserByIDRequest) (*struct{}, error) {
+	const op = "Handler:CancelHoliday"
 
 	tracer := otel.Tracer(tracerName)
 	_, span := tracer.Start(ctx, op, trace.WithSpanKind(trace.SpanKindServer))
@@ -218,26 +213,18 @@ func (uh *UserHandler) UpdateForm(ctx context.Context, req *UpdateFormRequest) (
 	)
 	log.Debug(op)
 
-	cmd := commands.UpdateFormCommand{
-		UserID:   req.UserID,
-		SpaceID:  req.SpaceID,
-		UserTags: req.Body.UserTags,
-		PairTags: req.Body.PairTags,
+	cmd := commands.CancelHolidayCommand{
+		ID: req.Body.ID,
 	}
 
-	user, forms, err := uh.userUC.UpdateForm(ctx, cmd)
+	err := uh.userUC.CancelHoliday(ctx, cmd)
 	if err != nil {
 		switch {
-		case errors.Is(err, repository.ErrUserNotFound):
-			log.Info("couldn't update user: ", err.Error())
-			return nil, huma.Error404NotFound(err.Error())
 		default:
-			log.Error("couldn't update user: ", err.Error())
-			return nil, huma.Error500InternalServerError(err.Error())
+			log.Error("couldn't cancel holiday: ", err.Error())
+			return nil, huma.Error500InternalServerError("internal service error")
 		}
 	}
 
-	resp := ToUserWithFormsOutputFromEntity(user, forms)
-
-	return resp, nil
+	return &struct{}{}, nil
 }

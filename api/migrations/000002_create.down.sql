@@ -1,0 +1,16 @@
+BEGIN;
+
+DROP TABLE IF EXISTS criterion;
+DROP TABLE IF EXISTS event_members;
+DROP TABLE IF EXISTS holidays_status;
+DROP TABLE IF EXISTS reviews;
+DROP TABLE IF EXISTS user_space;
+DROP TABLE IF EXISTS event;
+DROP TABLE IF EXISTS space;
+DROP TABLE IF EXISTS "user";
+
+DROP TYPE sex;
+DROP TYPE goal;
+DROP TYPE status;
+
+COMMIT;

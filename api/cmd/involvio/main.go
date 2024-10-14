@@ -3,14 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/Slava02/Involvio/api/pkg/logger"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/Slava02/Involvio/config"
-	"github.com/Slava02/Involvio/internal/app"
+	"github.com/Slava02/Involvio/api/config"
+	"github.com/Slava02/Involvio/api/internal/app"
 )
 
 func main() {
@@ -25,7 +26,7 @@ func main() {
 	// Initialize the logger
 	logger.SetupLogger(cfg)
 
-	err = api.Run(ctx, cancel, cfg, slog.Default())
+	err = Run(ctx, cancel, cfg, slog.Default())
 	if err != nil {
 		slog.Error(fmt.Sprintf("Failed to run application: %v", err))
 		return

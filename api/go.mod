@@ -1,4 +1,4 @@
-module github.com/Slava02/Involvio
+module github.com/Slava02/Involvio/api
 
 go 1.22.5
 

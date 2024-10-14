@@ -3,10 +3,12 @@ package app
 
 import (
 	"fmt"
-	"github.com/Slava02/Involvio/config"
-	"github.com/Slava02/Involvio/internal/app/route"
-	"github.com/Slava02/Involvio/pkg/database"
-	"github.com/Slava02/Involvio/pkg/valid"
+	"github.com/Slava02/Involvio/api/config"
+	"github.com/Slava02/Involvio/api/internal/app/route"
+	"github.com/Slava02/Involvio/api/pkg/database"
+	"github.com/Slava02/Involvio/api/pkg/valid"
+	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/adapters/humafiber"
 	"github.com/gofiber/contrib/otelfiber/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
@@ -72,7 +74,7 @@ func Run(router *fiber.App, cfg *config.Config) {
 	}
 
 	// Setup routes
-	route.SetupRoutes(router, pg, &Deps{
+	SetupRoutes(router, pg, &Deps{
 		Validator: validator,
 	})
 
@@ -84,4 +86,30 @@ func Run(router *fiber.App, cfg *config.Config) {
 	if err := router.Listen(":" + cfg.HTTP.Port); err != nil {
 		slog.Error(fmt.Sprintf("server starting error: %v", err))
 	}
+}
+
+func SetupRoutes(router *fiber.App, pg *database.Postgres, deps *Deps) {
+	openapiConfig := huma.DefaultConfig("api", "1.0.0")
+	openapiConfig.Components.SecuritySchemes = map[string]*huma.SecurityScheme{
+		"auth": {
+			Type:         "rest",
+			Scheme:       "bearer",
+			BearerFormat: "JWT",
+		},
+	}
+	openapiConfig.Security = []map[string][]string{
+		{"auth": {""}},
+	}
+
+	api := humafiber.New(router, openapiConfig)
+
+	route.SetupUserRoutes(api, pg, &route.UserDeps{
+		Validator: deps.Validator,
+	})
+	route.SetupGroupRoutes(api, pg, &route.GroupDeps{
+		Validator: deps.Validator,
+	})
+	route.SetupEventRoutes(api, pg, &route.EventDeps{
+		Validator: deps.Validator,
+	})
 }

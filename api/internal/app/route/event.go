@@ -1,12 +1,12 @@
 package route
 
 import (
-	"github.com/Slava02/Involvio/internal/entity"
-	"github.com/Slava02/Involvio/internal/handler/rest/v1/event"
-	"github.com/Slava02/Involvio/internal/repository"
-	"github.com/Slava02/Involvio/internal/usecase"
-	"github.com/Slava02/Involvio/pkg/database"
-	"github.com/Slava02/Involvio/pkg/valid"
+	"github.com/Slava02/Involvio/api/internal/entity"
+	"github.com/Slava02/Involvio/api/internal/handler/rest/v1/event"
+	"github.com/Slava02/Involvio/api/internal/repository"
+	"github.com/Slava02/Involvio/api/internal/usecase"
+	"github.com/Slava02/Involvio/api/pkg/database"
+	"github.com/Slava02/Involvio/api/pkg/valid"
 	"github.com/danielgtaylor/huma/v2"
 	"net/http"
 	"reflect"
@@ -18,7 +18,7 @@ type EventDeps struct {
 }
 
 //nolint:funlen
-func setupEventRoutes(api huma.API, pg *database.Postgres, deps *EventDeps) {
+func SetupEventRoutes(api huma.API, pg *database.Postgres, deps *EventDeps) {
 	o := sync.Once{}
 	eventUseCase := usecase.NewEventUseCase(repository.NewEventRepository(&o, pg))
 
@@ -26,13 +26,14 @@ func setupEventRoutes(api huma.API, pg *database.Postgres, deps *EventDeps) {
 
 	registry := huma.NewMapRegistry("#/components/schemas/", huma.DefaultSchemaNamer)
 	eventSchema := huma.SchemaFromType(registry, reflect.TypeOf(&entity.Event{}))
+	userEventsSchema := huma.SchemaFromType(registry, reflect.TypeOf(&event.UserEventsResponse{}))
 
 	huma.Register(api, huma.Operation{
 		OperationID:   "CreateEvent",
 		Method:        http.MethodPost,
 		Path:          "/events",
 		Summary:       "create new event",
-		Description:   "Create a new event record.",
+		Description:   "Create new event record.",
 		Tags:          []string{"Events"},
 		DefaultStatus: http.StatusCreated,
 		Responses: map[string]*huma.Response{
@@ -82,18 +83,18 @@ func setupEventRoutes(api huma.API, pg *database.Postgres, deps *EventDeps) {
 	}, eventHandler.CreateEvent)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "GetEvent",
+		OperationID: "GetUserEvents",
 		Method:      http.MethodGet,
 		Path:        "/events/{id}",
-		Summary:     "event by id",
-		Description: "Get event by id.",
+		Summary:     "events by user id",
+		Description: "Get all events users where user participated",
 		Tags:        []string{"Events"},
 		Responses: map[string]*huma.Response{
 			"200": {
 				Description: "IEventUC response",
 				Content: map[string]*huma.MediaType{
 					"application/json": {
-						Schema: eventSchema,
+						Schema: userEventsSchema,
 					},
 				},
 			},
@@ -138,7 +139,7 @@ func setupEventRoutes(api huma.API, pg *database.Postgres, deps *EventDeps) {
 				},
 			},
 		},
-	}, eventHandler.GetEvent)
+	}, eventHandler.GetUserEvents)
 
 	huma.Register(api, huma.Operation{
 		OperationID:   "DeleteEvent",
@@ -200,13 +201,13 @@ func setupEventRoutes(api huma.API, pg *database.Postgres, deps *EventDeps) {
 		OperationID:   "ReviewEvent",
 		Method:        http.MethodPost,
 		Path:          "/events/review",
-		Summary:       "join event",
-		Description:   "join event",
-		Tags:          []string{"Events"},
+		Summary:       "review event",
+		Description:   "leave feedback about event",
+		Tags:          []string{"Users"},
 		DefaultStatus: http.StatusCreated,
 		Responses: map[string]*huma.Response{
 			"201": {
-				Description: "reviewed IEventUC",
+				Description: "reviewed event",
 				Content:     map[string]*huma.MediaType{},
 			},
 			"400": {

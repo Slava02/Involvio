@@ -1,93 +1,60 @@
 package user
 
 import (
-	"github.com/Slava02/Involvio/internal/entity"
+	"github.com/Slava02/Involvio/api/internal/entity"
+	"time"
 )
 
 // USER
 
 // Converters
-func ToUserOutputFromEntity(user *entity.User) *UserResponse {
-	return &UserResponse{
+func ToUserOutputFromEntity(user *entity.User) *UserRequestResponse {
+	return &UserRequestResponse{
 		Body: struct{ *entity.User }{user},
-	}
-}
-
-func ToFormOutputFromEntity(form *entity.Form) *FormResponse {
-	return &FormResponse{
-		Body: struct{ *entity.Form }{form},
-	}
-}
-
-func ToUserWithFormsOutputFromEntity(user *entity.User, forms []*entity.Form) *UserWithFormsResponse {
-	return &UserWithFormsResponse{
-		Body: struct {
-			*entity.User
-			Forms []*entity.Form
-		}{user, forms},
 	}
 }
 
 // Schemas
 type (
-	UserByIdRequest struct {
-		ID int `path:"id" maxLength:"30" example:"1" doc:"user id"`
+	UserByUsernameRequest struct {
+		Username string `path:"username" json:"username" example:"ivanko228" doc:"Username"`
 	}
 
-	DeleteUserRequest struct {
-		UserId  int `path:"userId" maxLength:"30" example:"123" doc:"user id"`
-		SpaceId int `path:"spaceId" maxLength:"30" example:"123" doc:"space id"`
-	}
-
-	CreateUserRequest struct {
+	UserByIDRequest struct {
 		Body struct {
-			FirstName string `json:"first_name" example:"ivan" doc:"User first name"`
-			LastName  string `json:"last_name" example:"ivanov" doc:"User last nam"`
-			Username  string `json:"username" example:"ivanko228" doc:"Username"`
-			PhotoURL  string `json:"photo_url" example:"https://telegram/photo_ivan.png" doc:"User photo url"`
+			ID int `json:"id" example:"123" doc:"ID"`
 		}
 	}
 
+	//  TODO: как когда несколько параметров, а изменены могут быть только нескольо или один
 	UpdateUserRequest struct {
-		ID   int `path:"id" maxLength:"30" example:"1" doc:"user id"`
 		Body struct {
-			FirstName string `json:"first_name" example:"ivan" doc:"User first name"`
-			LastName  string `json:"last_name" example:"ivanov" doc:"User last nam"`
-			Username  string `json:"username" example:"ivanko228" doc:"Username"`
-			PhotoURL  string `json:"photo_url" example:"https://telegram/photo_ivan.png" doc:"User photo url"`
+			ID        int    `doc:"Telegram ID" json:"id"       example:"1234"`
+			FullName  string `doc:"First name" json:"full_name"       example:"ivan popkins"`
+			PhotoURL  string `doc:"Photo URL" json:"photo_url" example:"https://photo"`
+			City      string `doc:"User's city" json:"city" example:"Moscow"`
+			Position  string `doc:"User's position in organization" json:"position" example:"student"`
+			Interests string `doc:"User's interests" json:"interests" example:"Programming,math"`
 		}
 	}
 
-	FormByIdRequest struct {
-		UserID  int `path:"userId" maxLength:"30" example:"1" doc:"user id"`
-		SpaceID int `path:"spaceId" maxLength:"30" example:"1" doc:"space id"`
-	}
-
-	UpdateFormRequest struct {
-		UserID  int `path:"userId" maxLength:"30" example:"1" doc:"user id"`
-		SpaceID int `path:"spaceId" maxLength:"30" example:"1" doc:"space id"`
-		Body    struct {
-			UserTags entity.Tags
-			PairTags entity.Tags
-		}
-	}
-
-	UserResponse struct {
+	BlockUserRequest struct {
 		Body struct {
-			*entity.User
+			WhoID  int `doc:"Telegram ID of user who is blocking" json:"who_id"       example:"1234"`
+			WhomID int `doc:"Telegram ID of user who is being blocked" json:"whom_id"       example:"4321"`
 		}
 	}
 
-	UserWithFormsResponse struct {
+	SetHolidayRequest struct {
+		Body struct {
+			ID       int       `doc:"Telegram ID" json:"id"       example:"1234"`
+			TillDate time.Time `doc:"When holiday ends RFC 3339" json:"till_date" example:"2020-12-09T16:09:53+00:00"`
+		}
+	}
+
+	UserRequestResponse struct {
 		Body struct {
 			*entity.User
-			Forms []*entity.Form
-		}
-	}
-
-	FormResponse struct {
-		Body struct {
-			*entity.Form
 		}
 	}
 )

@@ -74,7 +74,18 @@ lint-fast: .install-golangci-lint
 
 # ---------------------------------- MIGRATIONS ---------------------------------
 
-.PHONY: new-migration
-new-migration:
-	migrate create -ext sql -dir ./migrations involvio_pg
+.PHONY: init-migration
+init-migration:
+	rm -rf migrations && mkdir migrations
+	migrate create -ext sql -dir ./migrations -seq involvio_pg
+
+.PHONY: m-down
+m-down:
+	migrate -database ${POSTGRESQL_URL} -path migrations down
+
+.PHONY: m-up
+m-up:
+	migrate -database ${POSTGRESQL_URL} -path migrations up
+
+
 

@@ -2,7 +2,7 @@ package models
 
 // TODO: clean up models
 const (
-	DefaultSpace = "Общая"
+	DefaultGroup = "Общая"
 )
 
 type User struct {
@@ -23,16 +23,4 @@ type User struct {
 // Photo describes a submitted photo
 type Photo struct {
 	FileID string
-}
-
-func (u *User) GetSpaces() string {
-	res := ""
-	for i, v := range u.Groups {
-		if i != 0 {
-			res += "," + v
-		} else {
-			res += v
-		}
-	}
-	return res
 }

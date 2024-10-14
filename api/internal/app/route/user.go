@@ -1,12 +1,12 @@
 package route
 
 import (
-	"github.com/Slava02/Involvio/internal/entity"
-	"github.com/Slava02/Involvio/internal/handler/rest/v1/user"
-	"github.com/Slava02/Involvio/internal/repository"
-	"github.com/Slava02/Involvio/internal/usecase"
-	"github.com/Slava02/Involvio/pkg/database"
-	"github.com/Slava02/Involvio/pkg/valid"
+	"github.com/Slava02/Involvio/api/internal/entity"
+	"github.com/Slava02/Involvio/api/internal/handler/rest/v1/user"
+	"github.com/Slava02/Involvio/api/internal/repository"
+	"github.com/Slava02/Involvio/api/internal/usecase"
+	"github.com/Slava02/Involvio/api/pkg/database"
+	"github.com/Slava02/Involvio/api/pkg/valid"
 	"github.com/danielgtaylor/huma/v2"
 	"net/http"
 	"reflect"
@@ -18,7 +18,7 @@ type UserDeps struct {
 }
 
 //nolint:funlen
-func setupUserRoutes(api huma.API, pg *database.Postgres, deps *UserDeps) {
+func SetupUserRoutes(api huma.API, pg *database.Postgres, deps *UserDeps) {
 	// Initialize use cases
 	o := sync.Once{}
 	userUseCase := usecase.NewUserUseCase(repository.NewUserRepository(&o, pg))
@@ -29,7 +29,6 @@ func setupUserRoutes(api huma.API, pg *database.Postgres, deps *UserDeps) {
 	registry := huma.NewMapRegistry("#/components/schemas/", huma.DefaultSchemaNamer)
 
 	userSchema := huma.SchemaFromType(registry, reflect.TypeOf(&entity.User{}))
-	holidaySchema := huma.SchemaFromType(registry, reflect.TypeOf(&entity.Holiday{}))
 
 	huma.Register(api, huma.Operation{
 		OperationID:   "CreateUser",
@@ -41,19 +40,8 @@ func setupUserRoutes(api huma.API, pg *database.Postgres, deps *UserDeps) {
 		DefaultStatus: http.StatusCreated,
 		Responses: map[string]*huma.Response{
 			"201": {
-				Description: "IUserUC created",
-				Content: map[string]*huma.MediaType{
-					"application/json": {
-						Schema: userSchema,
-					},
-				},
-				Headers: map[string]*huma.Param{
-					"Location": {
-						Description: "URL of the newly created user",
-						Schema:      &huma.Schema{Type: "string"},
-						Required:    true,
-					},
-				},
+				Description: "User created",
+				Content:     map[string]*huma.MediaType{},
 			},
 			"400": {
 				Description: "Invalid request",
@@ -88,9 +76,9 @@ func setupUserRoutes(api huma.API, pg *database.Postgres, deps *UserDeps) {
 	huma.Register(api, huma.Operation{
 		OperationID: "GetUser",
 		Method:      http.MethodGet,
-		Path:        "/users/{id}",
-		Summary:     "user by id",
-		Description: "Get a user by id.",
+		Path:        "/users/{username}",
+		Summary:     "user by username",
+		Description: "Get a user by username.",
 		Tags:        []string{"Users"},
 		Responses: map[string]*huma.Response{
 			"200": {
@@ -147,7 +135,7 @@ func setupUserRoutes(api huma.API, pg *database.Postgres, deps *UserDeps) {
 	huma.Register(api, huma.Operation{
 		OperationID: "UpdateUser",
 		Method:      http.MethodPut,
-		Path:        "/users/{id}",
+		Path:        "/users",
 		Summary:     "update user",
 		Description: "Update an existing user by ID.",
 		Tags:        []string{"Users"},
@@ -204,17 +192,30 @@ func setupUserRoutes(api huma.API, pg *database.Postgres, deps *UserDeps) {
 	}, userHandler.UpdateUser)
 
 	huma.Register(api, huma.Operation{
-		OperationID:   "DeleteUser",
-		Method:        http.MethodDelete,
-		Path:          "/users/{id}",
-		Summary:       "delete user",
-		Description:   "Delete a user by ID.",
-		Tags:          []string{"Users"},
-		DefaultStatus: http.StatusNoContent,
+		OperationID: "BlockUser",
+		Method:      http.MethodPost,
+		Path:        "/users/block",
+		Summary:     "block user",
+		Description: "block user",
+		Tags:        []string{"Users"},
 		Responses: map[string]*huma.Response{
-			"204": {
-				Description: "IUserUC deleted",
+			"200": {
+				Description: "User blocked",
 				Content:     map[string]*huma.MediaType{},
+			},
+			"400": {
+				Description: "Invalid request",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{
+							Type: "object",
+							Properties: map[string]*huma.Schema{
+								"message": {Type: "string"},
+								"field":   {Type: "string"},
+							},
+						},
+					},
+				},
 			},
 			"404": {
 				Description: "IUserUC not found",
@@ -243,21 +244,21 @@ func setupUserRoutes(api huma.API, pg *database.Postgres, deps *UserDeps) {
 				},
 			},
 		},
-	}, userHandler.DeleteUser)
+	}, userHandler.BlockUser)
 
 	huma.Register(api, huma.Operation{
 		OperationID: "SetUserHoliday",
 		Method:      http.MethodPost,
-		Path:        "/users/{id}/holiday",
-		Summary:     "set or reset holiday",
-		Description: "returns info about current user's holidays",
+		Path:        "/users/holiday",
+		Summary:     "set holiday",
+		Description: "prevent bot from sending messages for a certain amount of time",
 		Tags:        []string{"Users"},
 		Responses: map[string]*huma.Response{
 			"200": {
-				Description: "IUserUC response",
+				Description: "Holiday set",
 				Content: map[string]*huma.MediaType{
 					"application/json": {
-						Schema: holidaySchema,
+						Schema: userSchema,
 					},
 				},
 			},
@@ -303,4 +304,59 @@ func setupUserRoutes(api huma.API, pg *database.Postgres, deps *UserDeps) {
 			},
 		},
 	}, userHandler.SetHoliday)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "CancelUserHoliday",
+		Method:      http.MethodPost,
+		Path:        "/users/holiday/cancel",
+		Summary:     "set or reset holiday",
+		Description: "returns info about current user's holidays",
+		Tags:        []string{"Users"},
+		Responses: map[string]*huma.Response{
+			"200": {
+				Description: "Holiday canceled",
+				Content:     map[string]*huma.MediaType{},
+			},
+			"400": {
+				Description: "Invalid request",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{
+							Type: "object",
+							Properties: map[string]*huma.Schema{
+								"message": {Type: "string"},
+								"field":   {Type: "string"},
+							},
+						},
+					},
+				},
+			},
+			"404": {
+				Description: "IUserUC not found",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{
+							Type: "object",
+							Properties: map[string]*huma.Schema{
+								"error": {Type: "string"},
+							},
+						},
+					},
+				},
+			},
+			"500": {
+				Description: "Internal server error",
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{
+							Type: "object",
+							Properties: map[string]*huma.Schema{
+								"error": {Type: "string"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, userHandler.CancelHoliday)
 }

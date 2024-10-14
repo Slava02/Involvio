@@ -58,60 +58,8 @@
 ⋅⋅* [squirrel](https://github.com/Masterminds/squirrel)
 3. Docker
 
-### Архитектура
-![img.png](docs/img/img.png)
-
 ### База данных
-```mermaid
-erDiagram
-    SPACE {
-        integer id PK
-        varchar name
-        varchar description
-        jsonb tags
-    }
-
-    USER {
-        integer id PK
-        varchar first_name
-        varchar last_name
-        varchar username
-        varchar photo_url
-        timestamp auth_date
-    }
-
-    USER_SPACE {
-        integer user_id FK
-        integer space_id FK
-        jsonb user_tags
-        jsonb pair_tags
-        bool is_admin
-        bool is_creator
-        PK(user_id, space_id)
-    }
-
-    USER_EVENT {
-        integer user_id FK
-        integer event_id FK
-        PK(user_id, event_id)
-    }
-
-    EVENT {
-        integer id PK
-        integer space_id FK
-        varchar name
-        varchar description
-        timestamp begin_date
-        timestamp end_date
-        jsonb tags
-    }
-
-    SPACE ||--o{ USER_SPACE : contains
-    USER ||--o{ USER_SPACE : participates_in
-    SPACE ||--o{ EVENT : hosts
-    EVENT ||--o{ USER_EVENT : involves
-    USER ||--o{ USER_EVENT : attends
-```
+![db.png](docs/img/db.png)
 
 ## Начало работы
 

@@ -7,7 +7,7 @@ import (
 )
 
 // TODO: implement Redis local Percistance
-var groups = []string{"Slava", "Test", models.DefaultSpace}
+var groups = []string{"Slava", "Test", models.DefaultGroup}
 
 type Storage struct {
 	Mutex sync.RWMutex
@@ -45,7 +45,7 @@ func (s *Storage) AddGroups(username string, groups string) string {
 	}
 
 	if groups[len(groups)-1] == ',' {
-		s.JoinGroup(username, models.DefaultSpace)
+		s.JoinGroup(username, models.DefaultGroup)
 	}
 
 	var groupList string
@@ -64,6 +64,15 @@ func (s *Storage) JoinGroup(username string, g string) {
 	s.Data[username].Groups = append(s.Data[username].Groups, g)
 }
 
+func (s *Storage) LeaveGroup(username, g string) {
+	userGroups := s.Data[username].Groups
+	for i, v := range s.Data[username].Groups {
+		if v == g {
+			userGroups = append(userGroups[:i], userGroups[i+1:]...)
+		}
+	}
+}
+
 func (s *Storage) CreateGroup(g string) {
 	groups = append(groups, g)
 }
@@ -79,4 +88,8 @@ func (s *Storage) GetGroup(g string) bool {
 	}
 
 	return true
+}
+
+func (s *Storage) GetGroups(username string) []string {
+	return s.Data[username].Groups
 }

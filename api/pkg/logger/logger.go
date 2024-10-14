@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"github.com/Slava02/Involvio/config"
+	"github.com/Slava02/Involvio/api/config"
 	"log/slog"
 	"os"
 )

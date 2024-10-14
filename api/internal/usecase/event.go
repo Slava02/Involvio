@@ -4,18 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Slava02/Involvio/internal/entity"
-	"github.com/Slava02/Involvio/internal/repository"
-	"github.com/Slava02/Involvio/internal/usecase/commands"
-	"github.com/Slava02/Involvio/pkg/hexid"
+	"github.com/Slava02/Involvio/api/internal/entity"
+	"github.com/Slava02/Involvio/api/internal/repository"
+	"github.com/Slava02/Involvio/api/internal/usecase/commands"
+	"github.com/Slava02/Involvio/api/pkg/hexid"
 	"log/slog"
 )
 
 type IEventRepository interface {
-	InsertEvent(ctx context.Context, userId int, event *entity.Event) error
+	InsertEvent(ctx context.Context, event *entity.Event) error
 	GetEvent(ctx context.Context, id int) (*entity.Event, error)
+	GetUserEvents(ctx context.Context, id int) ([]entity.Event, error)
 	AddUser(ctx context.Context, eventId, userId int) error
 	DeleteEvent(ctx context.Context, id int) error
+	AddReview(ctx context.Context, eventId, who, whom, grade int) error
 }
 
 func NewEventUseCase(ur IEventRepository) *EventUseCase {
@@ -26,8 +28,36 @@ type EventUseCase struct {
 	eventRepo IEventRepository
 }
 
+func (ec *EventUseCase) ReviewEvent(ctx context.Context, cmd commands.ReviewEventCommand) error {
+	const op = "UseCase:ReviewEvent"
+
+	fail := func(err error) error {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	log := slog.With(
+		slog.String("op", op),
+		slog.Int("event id", cmd.EventID),
+	)
+	log.Debug(op)
+
+	_, err := ec.eventRepo.GetEvent(ctx, cmd.EventID)
+	if err != nil {
+		log.Debug("couldn't get event: ", err.Error())
+		return fail(err)
+	}
+
+	err = ec.eventRepo.AddReview(ctx, cmd.EventID, cmd.WhoID, cmd.WhomID, cmd.Grade)
+	if err != nil {
+		log.Debug("couldn't add user review to event: ", err.Error())
+		return fail(err)
+	}
+
+	return nil
+}
+
 func (ec *EventUseCase) CreateEvent(ctx context.Context, cmd commands.CreateEventCommand) (*entity.Event, error) {
-	const op = "Usecase:CreateEvent"
+	const op = "UseCase:CreateEvent"
 
 	fail := func(err error) (*entity.Event, error) {
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -35,10 +65,11 @@ func (ec *EventUseCase) CreateEvent(ctx context.Context, cmd commands.CreateEven
 
 	log := slog.With(
 		slog.String("op", op),
+		slog.String("name", cmd.Name),
 	)
 	log.Debug(op)
 
-	// TODO: вынести генерацию id в зависимость
+	// TODO: вынести генератор id в зависимость
 	eventId, err := hexid.Generate()
 	if err != nil {
 		log.Error("couldn't generate id: ", err.Error())
@@ -47,15 +78,13 @@ func (ec *EventUseCase) CreateEvent(ctx context.Context, cmd commands.CreateEven
 
 	event := &entity.Event{
 		ID:          eventId,
-		SpaceId:     cmd.SpaceId,
 		Name:        cmd.Name,
 		Description: cmd.Description,
-		Tags:        cmd.Tags,
-		BeginDate:   cmd.BeginDate,
-		EndDate:     cmd.EndDate,
+		Date:        cmd.Date,
+		Users:       cmd.Users,
 	}
 
-	err = ec.eventRepo.InsertEvent(ctx, cmd.UserId, event)
+	err = ec.eventRepo.InsertEvent(ctx, event)
 	if err != nil {
 		log.Debug("couldn't insert event: ", err.Error())
 		return fail(err)
@@ -64,34 +93,34 @@ func (ec *EventUseCase) CreateEvent(ctx context.Context, cmd commands.CreateEven
 	return event, nil
 }
 
-func (ec *EventUseCase) GetEvent(ctx context.Context, cmd commands.EventByIdCommand) (*entity.Event, error) {
-	const op = "Usecase:GetEvent"
+func (ec *EventUseCase) GetUserEvents(ctx context.Context, cmd commands.EventByUserIdCommand) ([]entity.Event, error) {
+	const op = "UseCase:GetEvents"
 
-	fail := func(err error) (*entity.Event, error) {
+	fail := func(err error) ([]entity.Event, error) {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	log := slog.With(
 		slog.String("op", op),
-		slog.Int("event id", cmd.ID),
+		slog.Int("userID", cmd.ID),
 	)
 	log.Debug(op)
 
-	event, err := ec.eventRepo.GetEvent(ctx, cmd.ID)
+	events, err := ec.eventRepo.GetUserEvents(ctx, cmd.ID)
 	if err != nil {
-		if errors.Is(err, repository.ErrEventNotFound) {
-			log.Info("couldn't get event: ", err.Error())
+		if errors.Is(err, repository.ErrNotFound) {
+			log.Info("couldn't get events: ", err.Error())
 		} else {
-			log.Debug("couldn't get event: ", err.Error())
+			log.Debug("couldn't get events: ", err.Error())
 		}
 		return fail(err)
 	}
 
-	return event, nil
+	return events, nil
 }
 
 func (ec *EventUseCase) JoinEvent(ctx context.Context, cmd commands.JoinEventCommand) error {
-	const op = "Usecase:JoinEvent"
+	const op = "UseCase:JoinEvent"
 
 	fail := func(err error) error {
 		return fmt.Errorf("%s: %w", op, err)
@@ -104,7 +133,7 @@ func (ec *EventUseCase) JoinEvent(ctx context.Context, cmd commands.JoinEventCom
 	)
 	log.Debug(op)
 
-	_, err := ec.GetEvent(ctx, commands.EventByIdCommand{ID: cmd.EventId})
+	_, err := ec.eventRepo.GetEvent(ctx, cmd.EventId)
 	if err != nil {
 		log.Debug("couldn't get event: ", err.Error())
 		return fail(err)
@@ -120,7 +149,7 @@ func (ec *EventUseCase) JoinEvent(ctx context.Context, cmd commands.JoinEventCom
 }
 
 func (ec *EventUseCase) DeleteEvent(ctx context.Context, cmd commands.EventByIdCommand) error {
-	const op = "Usecase:DeleteEvent"
+	const op = "UseCase:DeleteEvent"
 
 	fail := func(err error) error {
 		return fmt.Errorf("%s: %w", op, err)
@@ -128,11 +157,11 @@ func (ec *EventUseCase) DeleteEvent(ctx context.Context, cmd commands.EventByIdC
 
 	log := slog.With(
 		slog.String("op", op),
-		slog.Int("event id", cmd.ID),
+		slog.Int("eventID", cmd.ID),
 	)
 	log.Debug(op)
 
-	_, err := ec.GetEvent(ctx, commands.EventByIdCommand{ID: cmd.ID})
+	_, err := ec.eventRepo.GetEvent(ctx, cmd.ID)
 	if err != nil {
 		log.Debug("couldn't get event: ", err.Error())
 		return fail(err)

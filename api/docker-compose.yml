@@ -20,7 +20,7 @@ services:
       timeout: 10s
   app:
     build:
-      context: ../..
+      context: .
       dockerfile: Dockerfile
     ports:
       - 8000:8000
